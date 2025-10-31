@@ -267,8 +267,39 @@ def generate_docx(
         included_master = list(MASTER.keys())
 
     # ---------- Build DOCX ----------
+    # --- Insert Incremint logo (if present) at the top/cover area ---
+import glob
+
+def _find_incremint_logo(logo_folder):
+    # look for files that contain 'incremint' (case-insensitive) and common image extensions
+    patterns = ["*.png", "*.jpg", "*.jpeg", "*.webp"]
+    for pat in patterns:
+        for p in glob.glob(os.path.join(logo_folder, pat)):
+            if "incremint" in os.path.basename(p).lower():
+                return p
+    return None
+
     doc = Document()
-    doc.add_paragraph("🏥 Health Insurance Quote").runs[0].bold = True
+
+    logo_path = _find_incremint_logo(logo_folder)
+    if logo_path and os.path.exists(logo_path):
+        try:
+            p_logo = doc.add_paragraph()
+            r_logo = p_logo.add_run()
+            # adjust width as needed (1.8 inch is a good default)
+            r_logo.add_picture(logo_path, width=Inches(1.8))
+            p_logo.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
+        except Exception as e:
+            # non-fatal: continue creating the doc even if logo fails
+            print("Failed to add incremint logo:", e)
+
+    # then continue with your regular title
+    title_p = doc.add_paragraph("🏥 Health Insurance Quote")
+    title_p.runs[0].bold = True
+    title_p.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
+
+
+
     doc.add_paragraph(f"Prepared by your trusted advisor – {datetime.now().strftime('%d-%m-%Y')}")
 
     # Client Details
