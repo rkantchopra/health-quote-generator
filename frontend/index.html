@@ -1,0 +1,64 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Health Quote Generator</title>
+  <style>
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu;max-width:760px;margin:3rem auto;padding:0 1rem}
+    .card{border:1px solid #e5e7eb;border-radius:16px;padding:24px;box-shadow:0 4px 18px rgba(0,0,0,.06)}
+    .btn{padding:10px 16px;border-radius:12px;border:0;background:#00A36C;color:#fff;font-weight:600;cursor:pointer}
+    .row{display:flex;gap:12px;align-items:center}
+    .muted{color:#6b7280}
+  </style>
+</head>
+<body>
+  <h1>🧾 Health Quote Generator</h1>
+  <p class="muted">Upload your Excel (sheets: <b>Client Details</b> & <b>Premiums</b>). You'll receive a DOCX with logos + plan names in the same cells.</p>
+  <div class="card">
+    <form id="form">
+      <div class="row">
+        <input type="file" id="file" accept=".xlsx,.xlsm,.xls" required />
+        <button class="btn" type="submit">Generate DOCX</button>
+      </div>
+    </form>
+    <p id="status" class="muted"></p>
+  </div>
+
+<script>
+  const form = document.getElementById('form');
+  const fileInput = document.getElementById('file');
+  const statusEl = document.getElementById('status');
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (!fileInput.files.length) return;
+    statusEl.textContent = 'Uploading…';
+    const fd = new FormData();
+    fd.append('file', fileInput.files[0]);
+    try {
+      const res = await fetch('/generate', { method: 'POST', body: fd });
+      if (!res.ok) {
+        // Read response as text, then try to extract JSON {detail: "..."}
+        const txt = await res.text();
+        let msg = 'Unknown error';
+        try { msg = (JSON.parse(txt).detail) || txt; } catch { msg = txt || msg; }
+        throw new Error(msg);
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'Health_Quote.docx';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      statusEl.textContent = '✅ Generated! Check your downloads.';
+    } catch (err) {
+      statusEl.textContent = '❌ ' + (err?.message || 'Unknown error');
+    }
+  });
+</script>
+</body>
+</html>
