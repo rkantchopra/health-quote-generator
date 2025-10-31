@@ -271,27 +271,28 @@ def generate_docx(
 import glob
 
 def _find_incremint_logo(logo_folder):
-    # look for files that contain 'incremint' (case-insensitive) and common image extensions
-    patterns = ["*.png", "*.jpg", "*.jpeg", "*.webp"]
-    for pat in patterns:
-        for p in glob.glob(os.path.join(logo_folder, pat)):
-            if "incremint" in os.path.basename(p).lower():
-                return p
+    """
+    Return the path of a logo image to place on the cover.
+    Prefer a file with 'incremint' in its name.
+    If none found, return the first available image in the folder.
+    """
+    if not logo_folder or not os.path.exists(logo_folder):
+        return None
+
+    # 1️⃣ Prefer 'incremint' logo if present
+    for pattern in ("*.png", "*.jpg", "*.jpeg", "*.webp"):
+        for path in glob.glob(os.path.join(logo_folder, pattern)):
+            if "incremint" in os.path.basename(path).lower():
+                return path
+
+    # 2️⃣ Otherwise, just use the first image found
+    for pattern in ("*.png", "*.jpg", "*.jpeg", "*.webp"):
+        files = sorted(glob.glob(os.path.join(logo_folder, pattern)))
+        if files:
+            return files[0]
+
+    # 3️⃣ None found
     return None
-
-    doc = Document()
-
-    logo_path = _find_incremint_logo(logo_folder)
-    if logo_path and os.path.exists(logo_path):
-        try:
-            p_logo = doc.add_paragraph()
-            r_logo = p_logo.add_run()
-            # adjust width as needed (1.8 inch is a good default)
-            r_logo.add_picture(logo_path, width=Inches(1.8))
-            p_logo.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
-        except Exception as e:
-            # non-fatal: continue creating the doc even if logo fails
-            print("Failed to add incremint logo:", e)
 
     # then continue with your regular title
     title_p = doc.add_paragraph("🏥 Health Insurance Quote")
