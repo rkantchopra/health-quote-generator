@@ -1,6 +1,8 @@
+# app/processor.py
 import os
 import re
 import io
+import glob
 from datetime import datetime
 from typing import Dict, List, Optional
 
@@ -42,7 +44,7 @@ def set_table_borders(table):
         borders.append(make(tag))
     tbl_pr.append(borders)
 
-# ---------- MASTER DATA ----------
+# ---------- MASTER DATA (unchanged) ----------
 MASTER: Dict[str, Dict[str, str]] = {
     "ICICI Lombard – Elevate": {
         "Restoration Benefit":"Unlimited (including for same illness)",
@@ -136,6 +138,7 @@ LOGO_MAP = {
     "Care Health – Supreme":"care_health"
 }
 
+# ---------- Helpers ----------
 def map_master(name_text: Optional[str]) -> Optional[str]:
     if not name_text:
         return None
@@ -182,6 +185,40 @@ def has_premium(row: pd.Series) -> bool:
                     return True
     return False
 
+def _safe_engine_for(filename_hint: Optional[str]) -> Optional[str]:
+    ext = (os.path.splitext(filename_hint or "")[1] or "").lower()
+    if ext in (".xlsx", ".xlsm"):
+        return "openpyxl"
+    if ext == ".xls":
+        return "xlrd"
+    return None
+
+def _find_incremint_logo(logo_folder: Optional[str]) -> Optional[str]:
+    """
+    Return a valid image path or None.
+    Prefer a file containing 'incremint'; otherwise return the first image found.
+    """
+    if not logo_folder:
+        return None
+    logo_folder = os.path.abspath(logo_folder)
+    if not os.path.isdir(logo_folder):
+        return None
+
+    # Prefer 'incremint' named file
+    for pattern in ("*.png", "*.jpg", "*.jpeg", "*.webp"):
+        for p in glob.glob(os.path.join(logo_folder, pattern)):
+            if "incremint" in os.path.basename(p).lower() and os.path.isfile(p):
+                return p
+
+    # Fallback: first available image (sorted for determinism)
+    for pattern in ("*.png", "*.jpg", "*.jpeg", "*.webp"):
+        files = sorted(glob.glob(os.path.join(logo_folder, pattern)))
+        for f in files:
+            if os.path.isfile(f):
+                return f
+
+    return None
+
 # ---------- Core generation ----------
 def generate_docx(
     excel_input,                 # bytes or str path
@@ -189,22 +226,24 @@ def generate_docx(
     logo_folder: str = "logos",
     filename_hint: Optional[str] = None,
 ) -> str:
-    # Choose engine by extension
-    def pick_engine(ext: str):
-        ext = (ext or "").lower()
-        if ext in (".xlsx", ".xlsm"): return "openpyxl"
-        if ext == ".xls": return "xlrd"
-        return None
+    """
+    Generate the Health Quote DOCX and return the output path.
+    excel_input: bytes (uploaded file) or a file path (string)
+    output_path: full path where DOCX will be saved
+    logo_folder: folder containing logos
+    filename_hint: original filename (helps pick Excel engine)
+    """
+    # --- Read Excel safely ---
+    engine = _safe_engine_for(filename_hint or "")
+    try:
+        if isinstance(excel_input, (bytes, bytearray)):
+            xls = pd.ExcelFile(io.BytesIO(excel_input), engine=engine)
+        else:
+            xls = pd.ExcelFile(excel_input, engine=engine)
+    except Exception as e:
+        raise ValueError(f"Failed to read Excel file: {e}")
 
-    # Read Excel into memory (BytesIO) to avoid file locks
-    if isinstance(excel_input, (bytes, bytearray)):
-        engine = pick_engine(os.path.splitext(filename_hint or "")[1])
-        xls = pd.ExcelFile(io.BytesIO(excel_input), engine=engine)
-    else:
-        engine = pick_engine(os.path.splitext(str(excel_input))[1])
-        xls = pd.ExcelFile(excel_input, engine=engine)
-        
-    
+    # Validate sheets
     required_sheets = ["Client Details", "Premiums"]
     missing = [s for s in required_sheets if s not in xls.sheet_names]
     if missing:
@@ -213,37 +252,18 @@ def generate_docx(
     client_df = pd.read_excel(xls, sheet_name="Client Details")
     premium_df = pd.read_excel(xls, sheet_name="Premiums")
 
-    # Optional but helpful: required columns
+    # Validate client columns
     client_required = ["Client Name", "Relation", "DOB", "Age", "City", "Sum Assured"]
-    prem_any = ["Plan Name","Plan","Insurance Company","Insurer","Company","Product"]
-    prem_prem_cols = ["1 Yr Premium","2 Yr Premium","3 Yr Premium"]
-
-    def _missing(cols, df_cols):
-        return [c for c in cols if c not in df_cols]
-
-    miss_client = _missing(client_required, client_df.columns)
+    miss_client = [c for c in client_required if c not in client_df.columns]
     if miss_client:
         raise ValueError(f"'Client Details' is missing columns: {', '.join(miss_client)}")
 
+    # Validate premium name column presence
+    prem_any = ["Plan Name","Plan","Insurance Company","Insurer","Company","Product"]
     if not any(c in premium_df.columns for c in prem_any):
         raise ValueError(f"'Premiums' must have at least one plan-name-like column: {', '.join(prem_any)}")
 
-    # premium columns are optional, but warn if all missing
-    if not any(c in premium_df.columns for c in prem_prem_cols):
-        # Not fatal; your code already handles missing/0, but this explains it.
-        pass
-
-    
-    
-
-    required = ["Client Details", "Premiums"]
-    for s in required:
-        if s not in xls.sheet_names:
-            raise RuntimeError(f"Missing sheet: {s}. Found sheets: {xls.sheet_names}")
-
-    client_df = pd.read_excel(xls, sheet_name="Client Details")
-    premium_df = pd.read_excel(xls, sheet_name="Premiums")
-
+    # Process premiums
     premium_df["HasPremium"] = premium_df.apply(has_premium, axis=1)
     valid_premiums = premium_df[premium_df["HasPremium"]].copy().reset_index(drop=True)
 
@@ -258,48 +278,38 @@ def generate_docx(
                 try:
                     if pd.notna(v) and str(v).strip():
                         raw = str(v).strip(); break
-                except Exception: pass
+                except Exception:
+                    pass
         mapped = map_master(raw)
-        if mapped and mapped not in included_master: included_master.append(mapped)
-        elif raw and raw not in included_master: included_master.append(raw)
+        if mapped and mapped not in included_master:
+            included_master.append(mapped)
+        elif raw and raw not in included_master:
+            included_master.append(raw)
 
     if not included_master:
         included_master = list(MASTER.keys())
 
     # ---------- Build DOCX ----------
-    # --- Insert Incremint logo (if present) at the top/cover area ---
-import glob
+    doc = Document()
 
-def _find_incremint_logo(logo_folder):
-    """
-    Return the path of a logo image to place on the cover.
-    Prefer a file with 'incremint' in its name.
-    If none found, return the first available image in the folder.
-    """
-    if not logo_folder or not os.path.exists(logo_folder):
-        return None
+    # --- Insert logo (prefer incremint, otherwise first found) ---
+    logo_path = _find_incremint_logo(logo_folder)
+    if isinstance(logo_path, str) and logo_path and os.path.isfile(logo_path):
+        try:
+            p_logo = doc.add_paragraph()
+            r_logo = p_logo.add_run()
+            r_logo.add_picture(logo_path, width=Inches(1.8))
+            p_logo.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
+        except Exception as e:
+            print("Warning: failed to add logo:", e)
+    else:
+        # no fatal error — continue without logo
+        print("Info: no logo found or invalid path, continuing without logo:", logo_path)
 
-    # 1️⃣ Prefer 'incremint' logo if present
-    for pattern in ("*.png", "*.jpg", "*.jpeg", "*.webp"):
-        for path in glob.glob(os.path.join(logo_folder, pattern)):
-            if "incremint" in os.path.basename(path).lower():
-                return path
-
-    # 2️⃣ Otherwise, just use the first image found
-    for pattern in ("*.png", "*.jpg", "*.jpeg", "*.webp"):
-        files = sorted(glob.glob(os.path.join(logo_folder, pattern)))
-        if files:
-            return files[0]
-
-    # 3️⃣ None found
-    return None
-
-    # then continue with your regular title
+    # main title and prepared-by line
     title_p = doc.add_paragraph("🏥 Health Insurance Quote")
     title_p.runs[0].bold = True
     title_p.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
-
-
 
     doc.add_paragraph(f"Prepared by your trusted advisor – {datetime.now().strftime('%d-%m-%Y')}")
 
@@ -318,7 +328,13 @@ def _find_incremint_logo(logo_folder):
             row[0].text = str(idx+1)
             row[1].text = str(r.get("Client Name",""))
             row[2].text = str(r.get("Relation",""))
-            row[3].text = str(r.get("DOB",""))
+            # format DOB if datetime
+            dob = r.get("DOB","")
+            try:
+                dob = pd.to_datetime(dob, errors="coerce").strftime("%d-%m-%Y") if pd.notna(dob) else ""
+            except Exception:
+                dob = str(dob)
+            row[3].text = dob
             row[4].text = str(r.get("Age",""))
             row[5].text = str(r.get("City",""))
             row[6].text = str(r.get("Sum Assured",""))
@@ -342,7 +358,7 @@ def _find_incremint_logo(logo_folder):
         cell = prow[0]
         cell.text = ""
         par = cell.paragraphs[0]
-        if logo_path:
+        if logo_path and os.path.isfile(logo_path):
             try:
                 rn = par.add_run()
                 rn.add_picture(logo_path, width=Inches(1.0))
@@ -350,7 +366,8 @@ def _find_incremint_logo(logo_folder):
             except Exception:
                 pass
         p2 = cell.add_paragraph()
-        run = p2.add_run(raw_label if raw_label else (master_key if master_key else ""))
+        display_name = master_key or raw_label or ""
+        run = p2.add_run(display_name)
         run.bold = True; run.font.size = Pt(11)
         p2.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
 
@@ -372,7 +389,7 @@ def _find_incremint_logo(logo_folder):
         hdr_row[i].text = name; set_cell_bg(hdr_row[i],"00A36C"); set_white_text(hdr_row[i])
         logo_cell = first_row[i]; logo_cell.text = ""
         logo_path = find_logo_file(name if name in MASTER else map_master(name), logo_folder)
-        if logo_path:
+        if logo_path and os.path.isfile(logo_path):
             try:
                 rrun = logo_cell.paragraphs[0].add_run()
                 rrun.add_picture(logo_path, width=Inches(1.0))
@@ -407,7 +424,8 @@ def _find_incremint_logo(logo_folder):
     try:
         ft.columns[0].width = Inches(2.2)
         for i in range(1, ncols): ft.columns[i].width = Inches(1.4)
-    except Exception: pass
+    except Exception:
+        pass
     set_table_borders(ft)
 
     # Advisory
@@ -431,7 +449,7 @@ def _find_incremint_logo(logo_folder):
         left = row[0]; left.text = ""
         lp = left.paragraphs[0]
         logo_path = find_logo_file(plan if plan in MASTER else map_master(plan), logo_folder)
-        if logo_path:
+        if logo_path and os.path.isfile(logo_path):
             try:
                 rrun = lp.add_run()
                 rrun.add_picture(logo_path, width=Inches(1.0))
@@ -454,7 +472,8 @@ def _find_incremint_logo(logo_folder):
     adv.autofit = False
     try:
         adv.columns[0].width = Inches(2.0); adv.columns[1].width = Inches(4.0)
-    except Exception: pass
+    except Exception:
+        pass
     set_table_borders(adv)
 
     note = doc.add_paragraph()
@@ -462,7 +481,7 @@ def _find_incremint_logo(logo_folder):
     note.add_run("Choose the plan matching your family's long-term protection, maternity and travel needs. "
                  "Discuss OPD and worldwide rider options before purchase.").italic = True
 
-    # file name
+    # file name and save
     try:
         client_name = client_df.loc[0,"Client Name"] if "Client Name" in client_df.columns and not client_df.empty else "Client"
     except Exception:
