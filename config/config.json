@@ -1,0 +1,82 @@
+{
+  "insurers": [
+    {
+      "id": 1,
+      "name": "ICICI Lombard – Elevate",
+      "active": true
+    },
+    {
+      "id": 2,
+      "name": "Tata AIG – Medicare Select",
+      "active": true
+    },
+    {
+      "id": 3,
+      "name": "Care Health – Supreme",
+      "active": true
+    }
+  ],
+  "features": [
+    { "id": 1, "name": "Restoration Benefit", "visible": true,
+      "values": {
+        "ICICI Lombard – Elevate": "Unlimited (including for same illness)",
+        "Tata AIG – Medicare Select": "Unlimited (including for same illness)",
+        "Care Health – Supreme": "Unlimited (including for same illness)"
+      }
+    },
+    { "id": 2, "name": "NCB Benefit", "visible": true,
+      "values": {
+        "ICICI Lombard – Elevate": "Unlimited 100% yearly (No Cap)",
+        "Tata AIG – Medicare Select": "100% yearly up to 500% (Super NCB)",
+        "Care Health – Supreme": "yearly 100% SA increase up to 600% (6X)"
+      }
+    },
+    { "id": 3, "name": "Room Rent", "visible": true,
+      "values": {
+        "ICICI Lombard – Elevate": "Single Private AC",
+        "Tata AIG – Medicare Select": "Single Private AC",
+        "Care Health – Supreme": "Single Private AC"
+      }
+    },
+    { "id": 4, "name": "Pre-Hospitalization", "visible": true,
+      "values": {
+        "ICICI Lombard – Elevate": "90 Days",
+        "Tata AIG – Medicare Select": "60 Days",
+        "Care Health – Supreme": "60 Days"
+      }
+    },
+    { "id": 5, "name": "Post-Hospitalization", "visible": true,
+      "values": {
+        "ICICI Lombard – Elevate": "180 Days",
+        "Tata AIG – Medicare Select": "90 Days",
+        "Care Health – Supreme": "180 Days"
+      }
+    },
+    { "id": 6, "name": "Unique Features", "visible": true,
+      "values": {
+        "ICICI Lombard – Elevate": "Unlimited NCB, 2-hr hospitalization, newborn Day-1",
+        "Tata AIG – Medicare Select": "Salary-linked discounts 7.5%, Super NCB 500%",
+        "Care Health – Supreme": "NCB up to 600% (6X), all non-consumables covered"
+      }
+    }
+  ],
+  "recommendations": {
+    "ICICI Lombard – Elevate": [
+      "Unlimited NCB growth (no cap)",
+      "Newborn Day-1 cover (10% SA)",
+      "2-hour hospitalization covered"
+    ],
+    "Tata AIG – Medicare Select": [
+      "Salary-linked discount (7.5%)",
+      "Super NCB up to 500%",
+      "Optional maternity/newborn rider"
+    ],
+    "Care Health – Supreme": [
+      "NCB up to 600% (6X)",
+      "Non-consumables covered",
+      "Health check-up rider"
+    ]
+  },
+  "advisor_note": "Choose the plan matching your family long-term protection, maternity and travel needs. Discuss OPD and worldwide rider options before purchase.",
+  "sum_assured_options": ["5L","10L","15L","20L","25L","50L"]
+}

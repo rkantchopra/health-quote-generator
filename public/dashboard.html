@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>increMint — Performance CRM</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary-green: #00A36C;
+      --surface-white: #FFFFFF;
+      --bg-main: #F8FAFB;
+      --border-light: #F1F5F9;
+      --text-dark: #1E293B;
+      --text-muted: #64748B;
+      --shadow-natural: 0 4px 20px rgba(0, 0, 0, 0.03), 0 2px 8px rgba(0, 0, 0, 0.02);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background-color: var(--bg-main);
+      color: var(--text-dark);
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      overflow-x: hidden;
+      min-height: 100vh;
+    }
+
+    /* TYPOGRAPHY HIERARCHY */
+    h1, h2, h3, h4 { color: var(--primary-green); font-weight: 800; letter-spacing: -0.02em; }
+
+    /* LOGIN OVERLAY */
+    #loginOverlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(255, 255, 255, 0.9);
+      backdrop-filter: blur(10px);
+      z-index: 10000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .login-card {
+      background: var(--surface-white);
+      padding: 48px;
+      border-radius: 20px;
+      box-shadow: var(--shadow-natural);
+      width: 100%;
+      max-width: 400px;
+      text-align: center;
+      border: 1px solid var(--border-light);
+    }
+
+    /* HEADER */
+    .dashboard-header {
+      background: var(--surface-white);
+      border-bottom: 1.5px solid var(--border-light);
+      padding: 16px 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .header-logo { display: flex; align-items: center; gap: 12px; font-weight: 800; color: var(--primary-green); font-size: 18px; }
+    .header-logo img { height: 30px; }
+
+    /* METRICS */
+    .metrics-section {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 24px;
+      padding: 32px 40px;
+    }
+    .metric-card {
+      background: var(--surface-white);
+      padding: 24px;
+      border-radius: 16px;
+      box-shadow: var(--shadow-natural);
+      border: 1px solid var(--border-light);
+      transition: transform 0.2s ease;
+    }
+    .metric-card:hover { transform: translateY(-2px); }
+    .metric-title { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px; }
+    .metric-value { font-size: 28px; font-weight: 800; color: var(--text-dark); }
+
+    /* SEARCH & TOOLS */
+    .tools-panel { padding: 0 40px 24px; display: flex; justify-content: space-between; align-items: center; }
+    .search-container { position: relative; width: 340px; }
+    .search-input {
+      width: 100%;
+      height: 48px;
+      background: var(--surface-white);
+      border: 1.5px solid var(--border-light);
+      border-radius: 12px;
+      padding: 0 16px 0 48px;
+      font-family: inherit;
+      font-size: 14px;
+      transition: all 0.2s ease;
+    }
+    .search-input:focus { outline: none; border-color: var(--primary-green); box-shadow: 0 0 0 4px rgba(0, 163, 108, 0.1); }
+    .search-icon { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: var(--primary-green); opacity: 0.7; }
+
+    /* TABLE */
+    .content-card {
+      margin: 0 40px 40px;
+      background: var(--surface-white);
+      border-radius: 20px;
+      box-shadow: var(--shadow-natural);
+      overflow: hidden;
+      border: 1px solid var(--border-light);
+    }
+    .data-table { width: 100%; border-collapse: collapse; }
+    .data-table thead { background: #F9FAFB; }
+    .data-table th { padding: 16px 24px; text-align: left; font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+    .data-table td { padding: 20px 24px; border-bottom: 1px solid var(--border-light); vertical-align: middle; transition: background 0.2s ease; }
+    .data-table tr:hover td { background: rgba(0, 163, 108, 0.03); }
+    .data-table tr.fade-out td { background: rgba(0, 163, 108, 0.1); transition: background 0.8s ease; }
+
+    /* BADGES */
+    .badge {
+      display: inline-flex;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+    .badge-new { background: var(--surface-white); border: 1.5px solid var(--primary-green); color: var(--primary-green); }
+    .badge-reviewed { background: var(--primary-green); color: var(--surface-white); }
+    .badge-flagged { background: #FFF1F2; border: 1.5px solid #E11D48; color: #E11D48; }
+
+    /* BUTTONS */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      height: 40px;
+      padding: 0 20px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-family: inherit;
+      border: none;
+      gap: 8px;
+    }
+    .btn-primary { background: var(--primary-green); color: var(--surface-white); }
+    .btn-primary:hover { background: #008F5D; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0, 163, 108, 0.2); }
+    .btn-secondary { background: var(--surface-white); border: 1.5px solid var(--primary-green); color: var(--primary-green); }
+    .btn-secondary:hover { background: rgba(0, 163, 108, 0.05); }
+
+    /* ICON ACTIONS */
+    .action-icon-btn {
+      background: none;
+      border: none;
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--primary-green);
+      transition: background 0.2s;
+    }
+    .action-icon-btn:hover { background: rgba(0, 163, 108, 0.08); }
+
+    /* SPINNER */
+    .loader {
+      width: 24px;
+      height: 24px;
+      border: 3px solid rgba(0, 163, 108, 0.1);
+      border-radius: 50%;
+      border-top-color: var(--primary-green);
+      animation: spin 1s linear infinite;
+      display: none;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* EMPTY STATE */
+    #emptyState {
+      display: none;
+      padding: 80px 40px;
+      text-align: center;
+    }
+    #emptyState svg { width: 120px; height: 120px; margin-bottom: 24px; }
+
+    /* QUOTE MODAL */
+    #quoteModal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.7);
+      backdrop-filter: blur(6px);
+      z-index: 9999;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 24px 16px;
+      overflow-y: auto;
+    }
+    .modal-container {
+      background: var(--surface-white);
+      border-radius: 20px;
+      width: 100%;
+      max-width: 860px;
+      box-shadow: 0 24px 80px rgba(0,0,0,0.25);
+      overflow: hidden;
+      margin: auto;
+    }
+    .modal-header {
+      background: linear-gradient(135deg, var(--primary-green), #008F5D);
+      color: white;
+      padding: 24px 32px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+    .modal-header h2 { color: white; font-size: 20px; margin-bottom: 4px; }
+    .modal-header p { opacity: 0.85; font-size: 13px; }
+    .modal-close-btn {
+      background: rgba(255,255,255,0.2);
+      border: none;
+      color: white;
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 18px;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.2s;
+    }
+    .modal-close-btn:hover { background: rgba(255,255,255,0.35); }
+    .modal-body { padding: 28px 32px; }
+    .modal-section { margin-bottom: 28px; }
+    .modal-section-title {
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1.5px solid var(--border-light);
+    }
+    .members-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .members-table th { padding: 10px 14px; text-align: left; font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; background: #F9FAFB; }
+    .members-table td { padding: 12px 14px; border-bottom: 1px solid var(--border-light); }
+    .insurer-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; }
+    .insurer-card {
+      border: 1.5px solid var(--border-light);
+      border-radius: 14px;
+      padding: 20px;
+      transition: border-color 0.2s;
+    }
+    .insurer-card:hover { border-color: var(--primary-green); }
+    .insurer-card-name { font-size: 14px; font-weight: 800; color: var(--primary-green); margin-bottom: 14px; }
+    .premium-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--border-light); font-size: 13px; }
+    .premium-row:last-child { border-bottom: none; }
+    .premium-label { color: var(--text-muted); font-size: 12px; }
+    .premium-value { font-weight: 700; color: var(--text-dark); }
+    .advisor-note-box {
+      background: #FFFBEB;
+      border: 1.5px solid #FDE68A;
+      border-radius: 12px;
+      padding: 16px 20px;
+      font-size: 14px;
+      line-height: 1.6;
+      color: #78350F;
+      white-space: pre-wrap;
+    }
+    .modal-footer {
+      padding: 20px 32px;
+      background: #F9FAFB;
+      border-top: 1.5px solid var(--border-light);
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+    }
+
+    /* EDIT MODAL */
+    #editModal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.7);
+      backdrop-filter: blur(6px);
+      z-index: 10000;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 24px 16px;
+      overflow-y: auto;
+    }
+    .edit-modal-container {
+      background: var(--surface-white);
+      border-radius: 20px;
+      width: 100%;
+      max-width: 700px;
+      box-shadow: 0 24px 80px rgba(0,0,0,0.25);
+      overflow: hidden;
+      margin: auto;
+    }
+    .edit-modal-header {
+      background: linear-gradient(135deg, #1E293B, #334155);
+      color: white;
+      padding: 22px 28px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .edit-modal-header h3 { color: white; font-size: 17px; }
+    .insurer-select-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border-light);
+      cursor: pointer;
+    }
+    .insurer-select-row:last-child { border-bottom: none; }
+    .insurer-select-row input[type=checkbox] { width: 18px; height: 18px; accent-color: var(--primary-green); cursor: pointer; }
+    .insurer-select-label { font-weight: 700; font-size: 14px; }
+    .insurer-premium-fields {
+      display: none;
+      grid-template-columns: 1fr 1fr 1fr 1fr;
+      gap: 10px;
+      padding: 12px 0 8px 28px;
+    }
+    .insurer-premium-fields.show { display: grid; }
+    .premium-input-group label { font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; display: block; margin-bottom: 4px; }
+    .premium-input-group input, .premium-input-group select {
+      width: 100%;
+      height: 38px;
+      border: 1.5px solid var(--border-light);
+      border-radius: 8px;
+      padding: 0 10px;
+      font-size: 13px;
+      font-family: inherit;
+      transition: border-color 0.2s;
+    }
+    .premium-input-group input:focus, .premium-input-group select:focus {
+      outline: none;
+      border-color: var(--primary-green);
+    }
+    .edit-save-btn {
+      background: var(--primary-green);
+      color: white;
+      border: none;
+      height: 44px;
+      padding: 0 28px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+      transition: background 0.2s;
+    }
+    .edit-save-btn:hover { background: #008F5D; }
+    .edit-save-btn:disabled { background: #94A3B8; cursor: not-allowed; }
+
+    /* PRINT STYLES */
+    @media print {
+      @page { size: A4; margin: 15mm; }
+      body * { visibility: hidden; }
+      #quoteModal, #quoteModal * { visibility: visible; }
+      #quoteModal {
+        position: absolute;
+        inset: 0;
+        background: none !important;
+        backdrop-filter: none !important;
+        padding: 0;
+        display: block !important;
+      }
+      .modal-container { box-shadow: none; border-radius: 0; max-width: 100%; }
+      .modal-footer, .modal-close-btn { display: none !important; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- LOGIN -->
+  <div id="loginOverlay">
+    <div class="login-card">
+      <div style="margin-bottom: 32px;"><img src="/logo.png" alt="Logo" style="height: 40px;"></div>
+      <h2 style="font-size: 24px; margin-bottom: 12px;">Admin Portal</h2>
+      <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 32px;">Please enter your credentials to access the lead management system.</p>
+      
+      <div id="loginError" style="display:none; color: #E11D48; background: #FFF1F2; padding: 12px; border-radius: 10px; margin-bottom: 24px; font-size: 13px; font-weight: 600;">
+        Invalid Access Credentials
+      </div>
+
+      <input type="password" id="dashPw" placeholder="Access Code" style="width: 100%; height: 50px; border: 1.5px solid var(--border-light); border-radius: 12px; text-align: center; font-size: 16px; margin-bottom: 20px; transition: border-color 0.2s;" onkeydown="if(event.key==='Enter')dashLogin()">
+      
+      <button class="btn btn-primary" onclick="dashLogin()" style="width: 100%; height: 50px;">Authenticate Session</button>
+    </div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div id="dashContent" style="display:none;">
+    <header class="dashboard-header">
+      <div class="header-logo"><img src="/logo.png" alt="Logo"> performance crm</div>
+      <div style="display: flex; gap: 12px;">
+        <button class="btn btn-secondary" onclick="exportCSV()">Download CSV</button>
+        <button class="btn btn-primary" onclick="location.reload()">Sign Out</button>
+      </div>
+    </header>
+
+    <div class="metrics-section">
+      <div class="metric-card">
+        <div class="metric-title">Total Leads</div>
+        <div id="statTotal" class="metric-value">0</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-title">New Opportunities</div>
+        <div id="statNew" class="metric-value" style="color: var(--primary-green);">0</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-title">In Review</div>
+        <div id="statReview" class="metric-value">0</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-title">Total Exported</div>
+        <div id="statExport" class="metric-value">0</div>
+      </div>
+    </div>
+
+    <div class="tools-panel">
+      <div class="search-container">
+        <svg class="search-icon" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+        <input type="text" id="leadSearch" class="search-input" placeholder="Search by name or number..." oninput="handleSearch()">
+      </div>
+      <div id="fetchLoader" class="loader"></div>
+    </div>
+
+    <div class="content-card">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Quote Reference</th>
+            <th>Customer Information</th>
+            <th>Submission Date</th>
+            <th>Lead Status</th>
+            <th style="text-align: right;">Operations</th>
+          </tr>
+        </thead>
+        <tbody id="quotesBody"></tbody>
+      </table>
+
+      <!-- EMPTY STATE -->
+      <div id="emptyState">
+        <svg fill="none" stroke="var(--primary-green)" stroke-width="1.5" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 15.75l-2.489-2.489m0 0a3.375 3.375 0 10-4.773-4.773 3.375 3.375 0 004.774 4.774zM21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <h3 style="font-size: 18px; margin-bottom: 8px;">No matching leads found</h3>
+        <p style="color: var(--text-muted); font-size: 14px;">Try adjusting your search criteria to find what you're looking for.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- QUOTE PREVIEW MODAL -->
+  <div id="quoteModal" onclick="if(event.target===this)closeModal()">
+    <div class="modal-container">
+      <div class="modal-header">
+        <div>
+          <h2 id="modal-quote-id">Quote #—</h2>
+          <p id="modal-customer-info">Customer · Submitted —</p>
+        </div>
+        <button class="modal-close-btn" onclick="closeModal()">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <!-- Members -->
+        <div class="modal-section">
+          <div class="modal-section-title">👥 Insured Members</div>
+          <table class="members-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Relation</th>
+                <th>Age</th>
+                <th>City</th>
+                <th>Sum Assured</th>
+              </tr>
+            </thead>
+            <tbody id="modal-members-body"></tbody>
+          </table>
+        </div>
+
+        <!-- Plans -->
+        <div class="modal-section">
+          <div class="modal-section-title">📊 Plan Comparison</div>
+          <div id="modal-insurer-cards" class="insurer-cards"></div>
+        </div>
+
+        <!-- Advisor Note -->
+        <div class="modal-section" id="modal-note-section" style="display:none;">
+          <div class="modal-section-title">📝 Advisor Note</div>
+          <div id="modal-advisor-note" class="advisor-note-box"></div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="markReviewedFromModal()">✓ Mark Reviewed</button>
+        <button class="btn btn-secondary" onclick="window.print()">🖨 Print</button>
+        <button class="btn btn-secondary" id="modal-pdf-btn" onclick="downloadPDF(currentQuoteId)">⬇ Download PDF</button>
+        <button class="btn btn-primary" onclick="closeModal()">✕ Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- EDIT QUOTE MODAL -->
+  <div id="editModal" onclick="if(event.target===this)closeEditModal()">
+    <div class="edit-modal-container">
+      <div class="edit-modal-header">
+        <div>
+          <h3>✏️ Edit Quote</h3>
+          <p id="edit-modal-subtitle" style="opacity:0.7;font-size:12px;margin-top:3px"></p>
+        </div>
+        <button class="modal-close-btn" onclick="closeEditModal()">✕</button>
+      </div>
+
+      <div style="padding: 24px 28px;">
+        <!-- Insurer Selection -->
+        <div style="margin-bottom:24px">
+          <div class="modal-section-title" style="margin-bottom:14px">🏥 Select Insurers & Enter Premiums</div>
+          <div id="edit-insurers-list"></div>
+        </div>
+
+        <!-- Advisor Note -->
+        <div style="margin-bottom:24px">
+          <div class="modal-section-title" style="margin-bottom:10px">📝 Advisor Note</div>
+          <textarea id="edit-advisor-note"
+            style="width:100%;min-height:90px;border:1.5px solid var(--border-light);border-radius:10px;padding:12px 14px;font-size:13px;font-family:inherit;resize:vertical;transition:border-color 0.2s"
+            onfocus="this.style.borderColor='var(--primary-green)'"
+            onblur="this.style.borderColor='var(--border-light)'"
+            placeholder="Add a note for the customer about which plan to choose..."></textarea>
+        </div>
+
+        <!-- Save -->
+        <div style="display:flex;justify-content:flex-end;gap:12px">
+          <button class="btn btn-secondary" onclick="closeEditModal()">Cancel</button>
+          <button class="edit-save-btn" id="edit-save-btn" onclick="saveEditQuote()">💾 Save & Regenerate PDF</button>
+        </div>
+
+        <div id="edit-status-msg" style="display:none;margin-top:14px;padding:10px 14px;border-radius:8px;font-size:13px;font-weight:600;text-align:center"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let rawLeads = [];
+    let currentQuoteId = null;
+    let currentEditQuote = null;
+    let configInsurers = [];
+
+    async function dashLogin() {
+      const pw = document.getElementById('dashPw').value;
+      const res = await fetch('/api/dashboard-login', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ password: pw })
+      });
+      if (res.ok) {
+        document.getElementById('loginOverlay').style.display = 'none';
+        document.getElementById('dashContent').style.display = 'block';
+        fetchLeads();
+      } else {
+        document.getElementById('loginError').style.display = 'block';
+      }
+    }
+
+    async function fetchLeads() {
+      document.getElementById('fetchLoader').style.display = 'block';
+      try {
+        const res = await fetch('/api/quotes');
+        if (res.ok) {
+          rawLeads = await res.json();
+          updateMetrics();
+          renderTable(rawLeads);
+        }
+      } catch (e) {
+        console.error(e);
+      } finally {
+        document.getElementById('fetchLoader').style.display = 'none';
+      }
+    }
+
+    function updateMetrics() {
+      document.getElementById('statTotal').innerText = rawLeads.length;
+      document.getElementById('statNew').innerText = rawLeads.filter(l => (l.status || 'New') === 'New').length;
+      document.getElementById('statReview').innerText = rawLeads.filter(l => l.status === 'Reviewed').length;
+      document.getElementById('statExport').innerText = 0; // Placeholder
+    }
+
+    function renderTable(leads) {
+      const tbody = document.getElementById('quotesBody');
+      const empty = document.getElementById('emptyState');
+      
+      if (leads.length === 0) {
+        tbody.innerHTML = '';
+        empty.style.display = 'block';
+        return;
+      }
+
+      empty.style.display = 'none';
+      tbody.innerHTML = leads.map(l => {
+        const status = l.status || (l.reviewed ? 'Reviewed' : 'New');
+        const badgeClass = `badge-${status.toLowerCase().replace(' ', '-')}`;
+        
+        return `
+          <tr id="row-${l.quote_id}">
+            <td><span style="font-weight: 700; color: var(--primary-green);">${l.quote_id}</span></td>
+            <td>
+              <div style="font-weight: 700;">${l.customer_name || 'Anonymous'}</div>
+              <div style="font-size: 12px; color: var(--text-muted);">${l.customer_phone || ''}</div>
+            </td>
+            <td><div style="font-size: 13px;">${new Date(l.submitted_at).toLocaleDateString(undefined, {dateStyle: 'medium'})}</div></td>
+            <td><span class="badge ${badgeClass}">${status}</span></td>
+            <td style="text-align: right;">
+              <div style="display: flex; gap: 4px; justify-content: flex-end;">
+                <button class="action-icon-btn" title="View Quote" onclick="editLead('${l.quote_id}')">
+                  <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                </button>
+                <button class="action-icon-btn" title="Download PDF" onclick="downloadPDF('${l.quote_id}')">
+                  <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4m4-5l5 5 5-5m-5 5V3"/></svg>
+                </button>
+                <button class="action-icon-btn" title="Edit Quote (Add Insurers & Premiums)" onclick="openEditModal('${l.quote_id}')">
+                  <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                </button>
+                <button class="action-icon-btn" style="color: #E11D48;" title="Delete" onclick="deleteLead('${l.quote_id}')">
+                  <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function handleSearch() {
+      const term = document.getElementById('leadSearch').value.toLowerCase();
+      const filtered = rawLeads.filter(l => 
+        (l.customer_name || '').toLowerCase().includes(term) ||
+        (l.customer_phone || '').toLowerCase().includes(term) ||
+        (l.quote_id || '').toLowerCase().includes(term)
+      );
+      renderTable(filtered);
+    }
+
+    async function markReviewedFromModal() {
+      if (!currentQuoteId) return;
+      const res = await fetch(`/api/quotes/${currentQuoteId}/status`, {
+        method: 'PATCH',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ status: 'Reviewed' })
+      });
+      if (res.ok) {
+        closeModal();
+        fetchLeads();
+      }
+    }
+
+    // --- EDIT QUOTE MODAL ---
+    async function openEditModal(id) {
+      currentQuoteId = id;
+      const editModal = document.getElementById('editModal');
+      document.getElementById('edit-modal-subtitle').textContent = `Quote #${id}`;
+      document.getElementById('edit-status-msg').style.display = 'none';
+      document.getElementById('edit-save-btn').disabled = false;
+      document.getElementById('edit-save-btn').textContent = '💾 Save & Regenerate PDF';
+
+      // Load config + quote data in parallel
+      const [configRes, quoteRes] = await Promise.all([
+        fetch('/api/config'),
+        fetch(`/api/quotes/${id}/data`)
+      ]);
+      const config = await configRes.json();
+      const quote = await quoteRes.json();
+      currentEditQuote = quote;
+      configInsurers = (config.insurers || []).filter(i => i.active !== false);
+
+      // Existing insurer data (keyed by name)
+      const existingInsurers = {};
+      (quote.insurers || []).forEach(ins => {
+        const key = ins.name || ins.insurer || '';
+        existingInsurers[key] = ins;
+      });
+
+      // Build insurer rows
+      const sumOpts = (config.sum_assured_options || ['5L','10L','15L','20L','25L','50L']);
+      const sumOptHTML = sumOpts.map(o => `<option value="${o}">${o}</option>`).join('');
+
+      document.getElementById('edit-insurers-list').innerHTML = configInsurers.map((ins, i) => {
+        const existing = existingInsurers[ins.name] || {};
+        const checked = !!existingInsurers[ins.name];
+        return `
+          <div>
+            <div class="insurer-select-row">
+              <input type="checkbox" id="ins-chk-${i}" ${checked ? 'checked' : ''} onchange="toggleInsurerFields(${i})">
+              <label for="ins-chk-${i}" class="insurer-select-label" style="cursor:pointer;flex:1">${ins.name}</label>
+            </div>
+            <div class="insurer-premium-fields ${checked ? 'show' : ''}" id="ins-fields-${i}">
+              <div class="premium-input-group">
+                <label>1 Year (₹)</label>
+                <input type="number" id="ins-yr1-${i}" placeholder="e.g. 25000" value="${existing.premium_1yr || ''}">
+              </div>
+              <div class="premium-input-group">
+                <label>2 Year (₹)</label>
+                <input type="number" id="ins-yr2-${i}" placeholder="e.g. 47000" value="${existing.premium_2yr || ''}">
+              </div>
+              <div class="premium-input-group">
+                <label>3 Year (₹)</label>
+                <input type="number" id="ins-yr3-${i}" placeholder="e.g. 68000" value="${existing.premium_3yr || ''}">
+              </div>
+              <div class="premium-input-group">
+                <label>Sum Assured</label>
+                <select id="ins-sa-${i}">
+                  <option value="">Select</option>
+                  ${sumOptHTML}
+                </select>
+              </div>
+            </div>
+          </div>`;
+      }).join('');
+
+      // Set sum assured selections
+      configInsurers.forEach((ins, i) => {
+        const existing = existingInsurers[ins.name] || {};
+        const saSelect = document.getElementById(`ins-sa-${i}`);
+        if (saSelect && existing.sum_assured) saSelect.value = existing.sum_assured;
+      });
+
+      // Advisor note
+      document.getElementById('edit-advisor-note').value = quote.advisor_note || config.advisor_note || '';
+
+      editModal.style.display = 'flex';
+      document.body.style.overflow = 'hidden';
+    }
+
+    function toggleInsurerFields(i) {
+      const chk = document.getElementById(`ins-chk-${i}`);
+      const fields = document.getElementById(`ins-fields-${i}`);
+      fields.classList.toggle('show', chk.checked);
+    }
+
+    function closeEditModal() {
+      document.getElementById('editModal').style.display = 'none';
+      document.body.style.overflow = '';
+    }
+
+    async function saveEditQuote() {
+      const btn = document.getElementById('edit-save-btn');
+      const statusMsg = document.getElementById('edit-status-msg');
+      btn.disabled = true;
+      btn.textContent = '⏳ Saving...';
+
+      // Collect selected insurers
+      const insurers = [];
+      configInsurers.forEach((ins, i) => {
+        const chk = document.getElementById(`ins-chk-${i}`);
+        if (chk && chk.checked) {
+          insurers.push({
+            name: ins.name,
+            premium_1yr: document.getElementById(`ins-yr1-${i}`)?.value || '',
+            premium_2yr: document.getElementById(`ins-yr2-${i}`)?.value || '',
+            premium_3yr: document.getElementById(`ins-yr3-${i}`)?.value || '',
+            sum_assured: document.getElementById(`ins-sa-${i}`)?.value || ''
+          });
+        }
+      });
+
+      const payload = {
+        customer_name: currentEditQuote.customer_name,
+        customer_phone: currentEditQuote.customer_phone,
+        customer_email: currentEditQuote.customer_email,
+        members: currentEditQuote.members || [],
+        insurers,
+        advisor_note: document.getElementById('edit-advisor-note').value
+      };
+
+      try {
+        const res = await fetch(`/api/quotes/${currentQuoteId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (data.success) {
+          statusMsg.style.display = 'block';
+          statusMsg.style.background = '#F0FDF4';
+          statusMsg.style.color = '#166534';
+          statusMsg.textContent = '✅ Saved! PDF regenerated successfully.';
+          btn.textContent = '✅ Saved';
+          setTimeout(() => { closeEditModal(); fetchLeads(); }, 1500);
+        } else {
+          throw new Error(data.message || 'Save failed');
+        }
+      } catch(e) {
+        statusMsg.style.display = 'block';
+        statusMsg.style.background = '#FFF1F2';
+        statusMsg.style.color = '#E11D48';
+        statusMsg.textContent = '❌ Error: ' + e.message;
+        btn.disabled = false;
+        btn.textContent = '💾 Save & Regenerate PDF';
+      }
+    }
+
+    async function deleteLead(id) {
+      if (!confirm("Are you sure you want to delete this lead?")) return;
+      const res = await fetch(`/api/quotes/${id}`, { method: 'DELETE' });
+      if (res.ok) fetchLeads();
+    }
+
+    function exportCSV() {
+      const headers = ["ID", "Name", "Phone", "Date", "Status"];
+      const rows = rawLeads.map(l => [l.quote_id, l.customer_name, l.customer_phone, l.submitted_at, l.status]);
+      let content = "data:text/csv;charset=utf-8," + headers.join(",") + "\n" + rows.map(r => r.join(",")).join("\n");
+      const encodedUri = encodeURI(content);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", "incremint_leads.csv");
+      document.body.appendChild(link);
+      link.click();
+    }
+
+    async function editLead(id) {
+      currentQuoteId = id;
+      const res = await fetch(`/api/quotes/${id}/data`);
+      if (!res.ok) { alert('Failed to load quote. Please try again.'); return; }
+      const quote = await res.json();
+      populateModal(quote);
+      document.getElementById('quoteModal').style.display = 'flex';
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeModal() {
+      document.getElementById('quoteModal').style.display = 'none';
+      document.body.style.overflow = '';
+    }
+
+    function populateModal(q) {
+      document.getElementById('modal-quote-id').textContent = `Quote #${q.quote_id}`;
+      const dateStr = q.submitted_at ? new Date(q.submitted_at).toLocaleDateString(undefined, { dateStyle: 'medium' }) : '—';
+      document.getElementById('modal-customer-info').textContent =
+        `${q.customer_name || 'Unknown'} · ${q.customer_phone || ''} · Submitted ${dateStr}`;
+
+      // Members
+      const members = Array.isArray(q.members) ? q.members : [];
+      document.getElementById('modal-members-body').innerHTML = members.length
+        ? members.map(m => `
+            <tr>
+              <td style="font-weight:600">${m.name || '—'}</td>
+              <td>${m.relation || '—'}</td>
+              <td>${m.age || '—'}</td>
+              <td>${m.city || '—'}</td>
+              <td style="font-weight:700;color:var(--primary-green)">${m.sum_assured ? '₹' + Number(m.sum_assured).toLocaleString('en-IN') : '—'}</td>
+            </tr>`).join('')
+        : `<tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:20px">No member data</td></tr>`;
+
+      // Insurer cards
+      const insurers = Array.isArray(q.insurers) ? q.insurers : [];
+      document.getElementById('modal-insurer-cards').innerHTML = insurers.length
+        ? insurers.map(ins => `
+            <div class="insurer-card">
+              <div class="insurer-card-name">${ins.name || ins.insurer || '—'}</div>
+              ${ins.plan ? `<div style="font-size:12px;color:var(--text-muted);margin-bottom:10px">${ins.plan}</div>` : ''}
+              <div class="premium-row">
+                <span class="premium-label">1 Year Premium</span>
+                <span class="premium-value">${ins.premium_1yr || ins.premium1yr || ins.yr1 ? '₹' + Number(ins.premium_1yr || ins.premium1yr || ins.yr1).toLocaleString('en-IN') : '—'}</span>
+              </div>
+              <div class="premium-row">
+                <span class="premium-label">2 Year Premium</span>
+                <span class="premium-value">${ins.premium_2yr || ins.premium2yr || ins.yr2 ? '₹' + Number(ins.premium_2yr || ins.premium2yr || ins.yr2).toLocaleString('en-IN') : '—'}</span>
+              </div>
+              <div class="premium-row">
+                <span class="premium-label">3 Year Premium</span>
+                <span class="premium-value">${ins.premium_3yr || ins.premium3yr || ins.yr3 ? '₹' + Number(ins.premium_3yr || ins.premium3yr || ins.yr3).toLocaleString('en-IN') : '—'}</span>
+              </div>
+              ${ins.sum_assured ? `<div class="premium-row"><span class="premium-label">Sum Assured</span><span class="premium-value" style="color:var(--primary-green)">₹${Number(ins.sum_assured).toLocaleString('en-IN')}</span></div>` : ''}
+            </div>`).join('')
+        : `<div style="color:var(--text-muted);font-size:14px;padding:16px 0">No plan data available</div>`;
+
+      // Advisor note
+      const noteSection = document.getElementById('modal-note-section');
+      if (q.advisor_note) {
+        document.getElementById('modal-advisor-note').textContent = q.advisor_note;
+        noteSection.style.display = 'block';
+      } else {
+        noteSection.style.display = 'none';
+      }
+    }
+
+    async function downloadPDF(id) {
+      const btn = document.getElementById('modal-pdf-btn');
+      if (btn) { btn.textContent = 'Downloading...'; btn.disabled = true; }
+      try {
+        const res = await fetch(`/api/quotes/${id}/pdf`);
+        if (!res.ok) { alert('PDF not available for this quote.'); return; }
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${id}.pdf`;
+        a.click();
+        URL.revokeObjectURL(url);
+      } catch(e) {
+        alert('Download failed: ' + e.message);
+      } finally {
+        if (btn) { btn.textContent = '⬇ Download PDF'; btn.disabled = false; }
+      }
+    }
+  </script>
+</body>
+</html>

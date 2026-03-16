@@ -1,0 +1,1408 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>increMint — Admin Panel</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet">
+  <style>
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --green: #4CAF50;
+      --green-dark: #388E3C;
+      --green-light: #E8F5E9;
+      --gray: #f5f5f5;
+      --gray-border: #e0e0e0;
+      --gray-text: #757575;
+      --dark: #212121;
+      --white: #ffffff;
+      --shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.14);
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+      background: #f9fafb;
+      color: var(--dark);
+      min-height: 100vh;
+    }
+
+    /* ── ANIMATIONS ── */
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes modalIn {
+      from {
+        opacity: 0;
+        transform: scale(0.92) translateY(14px);
+      }
+
+      to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+      }
+    }
+
+    @keyframes modalOut {
+      from {
+        opacity: 1;
+        transform: scale(1);
+      }
+
+      to {
+        opacity: 0;
+        transform: scale(0.94);
+      }
+    }
+
+    @keyframes slideInRight {
+      from {
+        opacity: 0;
+        transform: translateX(36px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    @keyframes slideOutRight {
+      from {
+        opacity: 1;
+        transform: translateX(0);
+      }
+
+      to {
+        opacity: 0;
+        transform: translateX(36px);
+      }
+    }
+
+    /* NAVBAR */
+    .navbar {
+      background: var(--white);
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 28px;
+      border-bottom: 3px solid var(--green);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .navbar-logo img {
+      height: 36px;
+    }
+
+    .navbar-title {
+      font-weight: 700;
+      color: var(--green-dark);
+      font-size: 16px;
+    }
+
+    .navbar-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    /* BUTTONS */
+    .btn {
+      padding: 9px 20px;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 13px;
+      cursor: pointer;
+      border: none;
+      font-family: inherit;
+      transition: transform 0.15s, background 0.2s, box-shadow 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      text-decoration: none;
+    }
+
+    .btn:hover {
+      transform: scale(1.03);
+    }
+
+    .btn-primary {
+      background: var(--green);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: var(--green-dark);
+      transform: scale(1.03) translateY(-1px);
+      box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+    }
+
+    .btn-outline {
+      background: white;
+      border: 1.5px solid var(--green);
+      color: var(--green-dark);
+    }
+
+    .btn-outline:hover {
+      background: var(--green-light);
+    }
+
+    .btn-gray {
+      background: #f0f0f0;
+      color: var(--dark);
+      border: 1px solid var(--gray-border);
+    }
+
+    .btn-gray:hover {
+      background: #e0e0e0;
+    }
+
+    .btn-danger {
+      background: #ffebee;
+      color: #c62828;
+      border: 1px solid #ffcdd2;
+    }
+
+    .btn-danger:hover {
+      background: #ffcdd2;
+    }
+
+    .btn-red-solid {
+      background: #c62828;
+      color: white;
+    }
+
+    .btn-red-solid:hover {
+      background: #b71c1c;
+      transform: scale(1.03) translateY(-1px);
+    }
+
+    .btn-sm {
+      padding: 6px 12px;
+      font-size: 12px;
+    }
+
+    .btn-lg {
+      padding: 13px 28px;
+      font-size: 15px;
+    }
+
+    .btn-full {
+      width: 100%;
+      justify-content: center;
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(255, 255, 255, 0.4);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    /* LAYOUT */
+    .admin-layout {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 28px 20px 60px;
+    }
+
+    /* TABS */
+    .tabs {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 24px;
+      background: #f0f0f0;
+      padding: 4px;
+      border-radius: 10px;
+      width: fit-content;
+    }
+
+    .tab {
+      padding: 9px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 14px;
+      color: var(--gray-text);
+      transition: 0.2s;
+      white-space: nowrap;
+    }
+
+    .tab.active {
+      background: white;
+      color: var(--green-dark);
+      box-shadow: var(--shadow);
+    }
+
+    .tab:hover:not(.active) {
+      color: var(--dark);
+      background: rgba(255, 255, 255, 0.6);
+    }
+
+    /* CARDS */
+    .card {
+      background: var(--white);
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--gray-border);
+      margin-bottom: 20px;
+      overflow: hidden;
+      animation: fadeInUp 0.35s ease;
+    }
+
+    .card-header {
+      background: var(--green);
+      color: white;
+      padding: 14px 20px;
+      font-weight: 700;
+      font-size: 15px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .card-body {
+      padding: 24px;
+    }
+
+    /* TABLE */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+
+    thead th {
+      background: #f8f9fa;
+      padding: 12px 16px;
+      text-align: left;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--gray-text);
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      border-bottom: 1px solid var(--gray-border);
+    }
+
+    tbody td {
+      padding: 13px 16px;
+      border-bottom: 1px solid #f5f5f5;
+      vertical-align: middle;
+    }
+
+    tbody tr {
+      transition: background 0.15s;
+      animation: fadeInUp 0.3s ease;
+    }
+
+    tbody tr:hover {
+      background: #f9fafb;
+    }
+
+    tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    /* BADGES */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .badge-active {
+      background: var(--green-light);
+      color: var(--green-dark);
+    }
+
+    .badge-inactive {
+      background: #ffebee;
+      color: #c62828;
+    }
+
+    /* FORM */
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--gray-text);
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      margin-bottom: 5px;
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1.5px solid var(--gray-border);
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: inherit;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .form-control:focus {
+      outline: none;
+      border-color: var(--green);
+      box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.12);
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    @media(max-width:640px) {
+      .grid-2 {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* ALERT */
+    .alert-success {
+      background: var(--green-light);
+      border: 1px solid #a5d6a7;
+      color: var(--green-dark);
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      display: none;
+    }
+
+    /* TOGGLE SWITCH */
+    .toggle-switch {
+      position: relative;
+      width: 44px;
+      height: 24px;
+      flex-shrink: 0;
+    }
+
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .toggle-slider {
+      position: absolute;
+      inset: 0;
+      background: #ccc;
+      border-radius: 24px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    .toggle-slider:before {
+      content: '';
+      position: absolute;
+      width: 18px;
+      height: 18px;
+      left: 3px;
+      bottom: 3px;
+      background: white;
+      border-radius: 50%;
+      transition: 0.3s;
+    }
+
+    .toggle-switch input:checked+.toggle-slider {
+      background: var(--green);
+    }
+
+    .toggle-switch input:checked+.toggle-slider:before {
+      transform: translateX(20px);
+    }
+
+    /* INSURER CARD GRID */
+    .insurer-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 16px;
+    }
+
+    .insurer-card {
+      background: white;
+      border: 1.5px solid var(--gray-border);
+      border-radius: 12px;
+      padding: 18px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      animation: fadeInUp 0.3s ease;
+    }
+
+    .insurer-card:hover {
+      border-color: var(--green);
+      box-shadow: var(--shadow);
+    }
+
+    /* STICKY SAVE */
+    .sticky-save {
+      position: sticky;
+      bottom: 20px;
+      text-align: center;
+      margin-top: 20px;
+      z-index: 50;
+    }
+
+    /* ── MODALS ── */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.45);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 500;
+      padding: 20px;
+    }
+
+    .modal-overlay.open {
+      display: flex;
+    }
+
+    .modal {
+      background: white;
+      border-radius: 14px;
+      width: 100%;
+      max-width: 440px;
+      box-shadow: var(--shadow-lg);
+      overflow: hidden;
+      animation: modalIn 0.22s ease;
+    }
+
+    .modal.closing {
+      animation: modalOut 0.18s ease forwards;
+    }
+
+    .modal-header {
+      background: var(--green);
+      color: white;
+      padding: 18px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .modal-header h3 {
+      font-size: 16px;
+      font-weight: 800;
+    }
+
+    .modal-header.danger {
+      background: #c62828;
+    }
+
+    .modal-close {
+      background: rgba(255, 255, 255, 0.2);
+      border: none;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      cursor: pointer;
+      color: white;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s;
+    }
+
+    .modal-close:hover {
+      background: rgba(255, 255, 255, 0.35);
+    }
+
+    .modal-body {
+      padding: 24px;
+    }
+
+    .modal-footer {
+      padding: 16px 24px;
+      border-top: 1px solid var(--gray-border);
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+    }
+
+    .modal-icon {
+      font-size: 40px;
+      text-align: center;
+      margin-bottom: 12px;
+    }
+
+    .modal-text {
+      font-size: 15px;
+      color: var(--gray-text);
+      text-align: center;
+      line-height: 1.6;
+    }
+
+    .modal-text strong {
+      color: var(--dark);
+    }
+
+    /* ── TOAST NOTIFICATIONS ── */
+    .toast-container {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .toast {
+      padding: 13px 18px;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 13px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.14);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      animation: slideInRight 0.3s ease;
+      min-width: 240px;
+      max-width: 340px;
+      background: white;
+    }
+
+    .toast.hiding {
+      animation: slideOutRight 0.28s ease forwards;
+    }
+
+    .toast-icon {
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+
+    .toast-success {
+      border-left: 4px solid #4CAF50;
+    }
+
+    .toast-success .toast-icon::before {
+      content: '✅';
+    }
+
+    .toast-error {
+      border-left: 4px solid #f44336;
+    }
+
+    .toast-error .toast-icon::before {
+      content: '⚠️';
+    }
+
+    .toast-msg {
+      color: var(--dark);
+    }
+
+    /* modal error */
+    .modal-error {
+      background: #ffebee;
+      border: 1px solid #ffcdd2;
+      color: #c62828;
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      display: none;
+      margin-bottom: 12px;
+    }
+
+    /* LOGIN */
+    .login-screen {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--gray);
+    }
+
+    .login-card {
+      background: white;
+      border-radius: 14px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+      max-width: 400px;
+      width: 100%;
+      overflow: hidden;
+      animation: fadeInUp 0.4s ease;
+    }
+
+    .login-card-header {
+      background: var(--green);
+      padding: 28px;
+      text-align: center;
+    }
+
+    .login-card-header img {
+      height: 40px;
+      filter: brightness(0) invert(1);
+    }
+
+    .login-card-body {
+      padding: 28px;
+    }
+
+    .login-card-body h2 {
+      font-size: 20px;
+      font-weight: 800;
+      margin-bottom: 6px;
+    }
+
+    .login-card-body p {
+      color: var(--gray-text);
+      font-size: 14px;
+      margin-bottom: 20px;
+    }
+
+    .login-error {
+      background: #ffebee;
+      border: 1px solid #ffcdd2;
+      color: #c62828;
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      display: none;
+      margin-bottom: 14px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- TOAST CONTAINER -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- LOGIN -->
+  <div id="loginScreen" class="login-screen">
+    <div class="login-card">
+      <div class="login-card-header">
+        <img src="/logo.png" alt="increMint">
+      </div>
+      <div class="login-card-body">
+        <h2>Admin Panel</h2>
+        <p>Enter password to access admin settings</p>
+        <div id="loginError" class="login-error">⚠️ Wrong password</div>
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <input type="password" id="adminPw" class="form-control" placeholder="Enter admin password"
+            onkeydown="if(event.key==='Enter')adminLogin()">
+        </div>
+        <button class="btn btn-primary btn-full" id="adminLoginBtn" onclick="adminLogin()">Access Admin →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADMIN PANEL -->
+  <div id="adminContent" style="display:none;">
+    <nav class="navbar">
+      <a href="https://www.myincremint.com" class="navbar-logo"><img src="/logo.png" alt="increMint"></a>
+      <span class="navbar-title">⚙️ Admin Panel</span>
+      <div class="navbar-right">
+        <a href="/dashboard" class="btn btn-sm btn-outline">📊 Dashboard</a>
+        <button class="btn btn-sm btn-gray" onclick="location.reload()">Logout</button>
+      </div>
+    </nav>
+
+    <div class="admin-layout">
+      <div class="tabs">
+        <div class="tab active" onclick="switchTab('advisors')">👥 Advisors</div>
+        <div class="tab" onclick="switchTab('settings')">⚙️ Settings</div>
+        <div class="tab" onclick="switchTab('insurers')">🏢 Insurance Config</div>
+      </div>
+
+      <!-- ADVISORS TAB -->
+      <div id="tab_advisors">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+          <h2 style="font-size:18px; font-weight:700;">All Advisors</h2>
+          <button class="btn btn-primary" onclick="openAddAdvisor()">+ Add Advisor</button>
+        </div>
+        <div class="card">
+          <div style="overflow-x:auto;">
+            <table>
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Email</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="advisorsBody">
+                <tr>
+                  <td colspan="4" style="text-align:center;padding:30px;color:var(--gray-text);">Loading...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- SETTINGS TAB -->
+      <div id="tab_settings" style="display:none;">
+        <div class="card">
+          <div class="card-header">⚙️ System Settings</div>
+          <div class="card-body">
+            <div class="grid-2">
+              <div class="form-group">
+                <label class="form-label">Master Email (receives all PDFs)</label>
+                <input type="email" class="form-control" id="settingEmail" placeholder="owner@company.com">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Company Name</label>
+                <input type="text" class="form-control" id="settingCompany" placeholder="Your Company Name">
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">New Dashboard Password</label>
+              <input type="password" class="form-control" id="settingPassword"
+                placeholder="Leave blank to keep current">
+            </div>
+            <div class="alert-success" id="settingsSaved">✅ Settings saved!</div>
+            <button class="btn btn-primary" style="margin-top:8px;" onclick="saveSettings()">💾 Save Settings</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- INSURANCE CONFIG TAB -->
+      <div id="tab_insurers" style="display:none;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+          <h2 style="font-size:18px; font-weight:700;">Insurance Companies</h2>
+          <button class="btn btn-primary" onclick="addInsurer()">+ Add Insurer</button>
+        </div>
+        <div class="insurer-grid" id="insurerCards" style="margin-bottom:28px;"></div>
+
+        <div class="card" style="margin-bottom:0;">
+          <div class="card-header">
+            <span>📋 Feature Comparison Table</span>
+            <button onclick="addFeature()"
+              style="background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.4);color:white;padding:5px 12px;border-radius:6px;cursor:pointer;font-family:inherit;font-weight:600;font-size:12px;transition:background 0.2s;"
+              onmouseover="this.style.background='rgba(255,255,255,0.3)'"
+              onmouseout="this.style.background='rgba(255,255,255,0.2)'">+ Add Feature</button>
+          </div>
+          <div class="card-body" id="featuresBody"></div>
+        </div>
+
+        <div style="margin-top:24px;">
+          <h2 style="font-size:18px; font-weight:700; margin-bottom:16px;">💬 Recommendations</h2>
+          <div id="recommendationsBody"></div>
+        </div>
+
+        <div class="card" style="margin-top:0;">
+          <div class="card-header">📝 Global Advisor Note</div>
+          <div class="card-body">
+            <textarea class="form-control" id="globalNote" rows="4"
+              placeholder="Global advisor note shown at bottom of PDF..."></textarea>
+          </div>
+        </div>
+
+        <div class="sticky-save">
+          <button class="btn btn-primary btn-lg" onclick="saveConfig()">💾 Save All Config</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ ADD ADVISOR MODAL ═══ -->
+  <div class="modal-overlay" id="addAdvisorModal" onclick="if(event.target===this)closeAddAdvisor()">
+    <div class="modal" id="addAdvisorModalBox">
+      <div class="modal-header">
+        <h3>👤 Add New Advisor</h3>
+        <button class="modal-close" onclick="closeAddAdvisor()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div id="addAdvisorError" class="modal-error"></div>
+        <div class="form-group"><label class="form-label">Full Name</label><input type="text" class="form-control"
+            id="newName" placeholder="Advisor name"></div>
+        <div class="form-group"><label class="form-label">Email</label><input type="email" class="form-control"
+            id="newEmail" placeholder="advisor@company.com"></div>
+        <div class="form-group" style="margin:0;"><label class="form-label">Password</label><input type="password"
+            class="form-control" id="newPassword" placeholder="Set a password"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-gray" onclick="closeAddAdvisor()">Cancel</button>
+        <button class="btn btn-primary" id="addAdvisorBtn" onclick="addAdvisor()">Add Advisor</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ RESET PASSWORD MODAL ═══ -->
+  <div class="modal-overlay" id="resetPwModal" onclick="if(event.target===this)closeResetPw()">
+    <div class="modal" id="resetPwModalBox">
+      <div class="modal-header">
+        <h3>🔑 Reset Password</h3>
+        <button class="modal-close" onclick="closeResetPw()">✕</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size:14px; color:var(--gray-text); margin-bottom:16px;">Enter a new password for this advisor.
+        </p>
+        <div class="form-group" style="margin:0;"><label class="form-label">New Password</label><input type="password"
+            class="form-control" id="resetPwInput" placeholder="New password"
+            onkeydown="if(event.key==='Enter')confirmResetPw()"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-gray" onclick="closeResetPw()">Cancel</button>
+        <button class="btn btn-primary" id="resetPwBtn" onclick="confirmResetPw()">🔑 Reset Password</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ DELETE ADVISOR CONFIRM MODAL ═══ -->
+  <div class="modal-overlay" id="deleteAdvisorModal" onclick="if(event.target===this)closeDeleteAdvisor()">
+    <div class="modal" id="deleteAdvisorModalBox">
+      <div class="modal-header danger">
+        <h3>⚠️ Delete Advisor</h3>
+        <button class="modal-close" onclick="closeDeleteAdvisor()">✕</button>
+      </div>
+      <div class="modal-body" style="text-align:center; padding:32px 24px;">
+        <div class="modal-icon">🗑️</div>
+        <p class="modal-text">Are you sure you want to delete <strong id="deleteAdvisorName"></strong>?<br>This action
+          <strong>cannot be undone</strong>.</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-gray" onclick="closeDeleteAdvisor()">Cancel</button>
+        <button class="btn btn-red-solid" id="deleteAdvisorBtn" onclick="confirmDeleteAdvisor()">🗑️ Delete
+          Advisor</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ DELETE FEATURE CONFIRM MODAL ═══ -->
+  <div class="modal-overlay" id="deleteFeatureModal" onclick="if(event.target===this)closeDeleteFeature()">
+    <div class="modal" id="deleteFeatureModalBox">
+      <div class="modal-header danger">
+        <h3>⚠️ Delete Feature</h3>
+        <button class="modal-close" onclick="closeDeleteFeature()">✕</button>
+      </div>
+      <div class="modal-body" style="text-align:center; padding:32px 24px;">
+        <div class="modal-icon">🗑️</div>
+        <p class="modal-text">Are you sure you want to delete this feature row? This <strong>cannot be undone</strong>.
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-gray" onclick="closeDeleteFeature()">Cancel</button>
+        <button class="btn btn-red-solid" onclick="confirmDeleteFeature()">Delete Feature</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ DELETE INSURER CONFIRM MODAL ═══ -->
+  <div class="modal-overlay" id="deleteInsurerModal" onclick="if(event.target===this)closeDeleteInsurer()">
+    <div class="modal" id="deleteInsurerModalBox">
+      <div class="modal-header danger">
+        <h3>⚠️ Delete Insurer</h3>
+        <button class="modal-close" onclick="closeDeleteInsurer()">✕</button>
+      </div>
+      <div class="modal-body" style="text-align:center; padding:32px 24px;">
+        <div class="modal-icon">🏢</div>
+        <p class="modal-text">Delete <strong id="deleteInsurerName"></strong>? This will remove it from the comparison
+          table.</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-gray" onclick="closeDeleteInsurer()">Cancel</button>
+        <button class="btn btn-red-solid" onclick="confirmDeleteInsurer()">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ RENAME INSURER MODAL ═══ -->
+  <div class="modal-overlay" id="renameInsurerModal" onclick="if(event.target===this)closeRenameInsurer()">
+    <div class="modal" id="renameInsurerModalBox">
+      <div class="modal-header">
+        <h3>✏️ Rename Insurer</h3>
+        <button class="modal-close" onclick="closeRenameInsurer()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group" style="margin:0;"><label class="form-label">New Name</label><input type="text"
+            class="form-control" id="renameInsurerInput" placeholder="Insurer name"
+            onkeydown="if(event.key==='Enter')confirmRenameInsurer()"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-gray" onclick="closeRenameInsurer()">Cancel</button>
+        <button class="btn btn-primary" onclick="confirmRenameInsurer()">Save Name</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ ADD FEATURE MODAL ═══ -->
+  <div class="modal-overlay" id="addFeatureModal" onclick="if(event.target===this)closeAddFeature()">
+    <div class="modal" id="addFeatureModalBox">
+      <div class="modal-header">
+        <h3>📋 Add Feature</h3>
+        <button class="modal-close" onclick="closeAddFeature()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group" style="margin:0;"><label class="form-label">Feature Name</label><input type="text"
+            class="form-control" id="addFeatureInput" placeholder="e.g. Room Rent Limit"
+            onkeydown="if(event.key==='Enter')confirmAddFeature()"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-gray" onclick="closeAddFeature()">Cancel</button>
+        <button class="btn btn-primary" onclick="confirmAddFeature()">Add Feature</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ ADD INSURER MODAL ═══ -->
+  <div class="modal-overlay" id="addInsurerModal" onclick="if(event.target===this)closeAddInsurer()">
+    <div class="modal" id="addInsurerModalBox">
+      <div class="modal-header">
+        <h3>🏢 Add Insurer</h3>
+        <button class="modal-close" onclick="closeAddInsurer()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group" style="margin:0;"><label class="form-label">Insurer Name</label><input type="text"
+            class="form-control" id="addInsurerInput" placeholder="e.g. HDFC ERGO"
+            onkeydown="if(event.key==='Enter')confirmAddInsurer()"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-gray" onclick="closeAddInsurer()">Cancel</button>
+        <button class="btn btn-primary" onclick="confirmAddInsurer()">Add Insurer</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let configData = null;
+    let _resetPwId = null;
+    let _deleteAdvisorId = null, _deleteAdvisorName = '';
+    let _deleteFeatureIdx = null;
+    let _deleteInsurerId = null;
+    let _renameInsurerId = null;
+
+    // ─── TOAST SYSTEM ───
+    function showToast(msg, type = 'success') {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      toast.className = `toast toast-${type}`;
+      toast.innerHTML = `<span class="toast-icon"></span><span class="toast-msg">${msg}</span>`;
+      container.appendChild(toast);
+      setTimeout(() => {
+        toast.classList.add('hiding');
+        setTimeout(() => toast.remove(), 300);
+      }, 3200);
+    }
+
+    // ─── MODAL HELPERS ───
+    function openModal(id) {
+      const overlay = document.getElementById(id);
+      const box = overlay.querySelector('.modal');
+      overlay.classList.add('open');
+      box.classList.remove('closing');
+      void box.offsetWidth; // reflow
+    }
+    function closeModal(id) {
+      const overlay = document.getElementById(id);
+      const box = overlay.querySelector('.modal');
+      box.classList.add('closing');
+      setTimeout(() => overlay.classList.remove('open'), 180);
+    }
+
+    // ─── LOGIN ───
+    async function adminLogin() {
+      const pw = document.getElementById('adminPw').value;
+      const btn = document.getElementById('adminLoginBtn');
+      btn.innerHTML = '<span class="spinner"></span>';
+      btn.disabled = true;
+      try {
+        const res = await fetch('/api/dashboard-login', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password: pw })
+        });
+        const data = await res.json();
+        if (data.success) {
+          document.getElementById('loginScreen').style.display = 'none';
+          document.getElementById('adminContent').style.display = 'block';
+          await loadConfig();
+          await loadAdvisors();
+          await loadSettings();
+        } else {
+          document.getElementById('loginError').style.display = 'block';
+          btn.innerHTML = 'Access Admin →';
+          btn.disabled = false;
+        }
+      } catch (e) {
+        btn.innerHTML = 'Access Admin →';
+        btn.disabled = false;
+      }
+    }
+
+    async function loadConfig() {
+      const res = await fetch('/api/config');
+      configData = await res.json();
+      renderInsurerCards();
+      renderFeatures();
+      renderRecommendations();
+    }
+
+    async function loadSettings() {
+      try {
+        const cfg = configData;
+        if (cfg.email) document.getElementById('settingEmail').value = cfg.email;
+        if (cfg.company) document.getElementById('settingCompany').value = cfg.company;
+      } catch (e) { }
+    }
+
+    function switchTab(name) {
+      ['advisors', 'settings', 'insurers'].forEach(t => {
+        document.getElementById('tab_' + t).style.display = t === name ? 'block' : 'none';
+      });
+      document.querySelectorAll('.tab').forEach((el, i) => {
+        el.classList.toggle('active', ['advisors', 'settings', 'insurers'][i] === name);
+      });
+    }
+
+    // ─── ADVISORS ───
+    async function loadAdvisors() {
+      try {
+        const res = await fetch('/api/advisors');
+        const advisors = await res.json();
+        const tbody = document.getElementById('advisorsBody');
+        if (!advisors.length) {
+          tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:30px;color:var(--gray-text);">No advisors yet</td></tr>';
+          return;
+        }
+        tbody.innerHTML = advisors.map(a => `
+        <tr>
+          <td><strong>${a.name}</strong></td>
+          <td>${a.email}</td>
+          <td><span class="badge ${a.is_active ? 'badge-active' : 'badge-inactive'}">${a.is_active ? '✓ Active' : '✗ Inactive'}</span></td>
+          <td>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;">
+              <button class="btn btn-sm btn-outline" onclick="openResetPw(${a.id})">🔑 Reset PW</button>
+              <button class="btn btn-sm ${a.is_active ? 'btn-gray' : 'btn-primary'}" onclick="toggleAdvisor(${a.id})">${a.is_active ? 'Deactivate' : 'Activate'}</button>
+              <button class="btn btn-sm btn-danger" onclick="openDeleteAdvisor(${a.id}, '${a.name.replace(/'/g, "\\'")}')">🗑 Delete</button>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+      } catch (e) { }
+    }
+
+    // Add Advisor Modal
+    function openAddAdvisor() {
+      document.getElementById('addAdvisorError').style.display = 'none';
+      document.getElementById('newName').value = '';
+      document.getElementById('newEmail').value = '';
+      document.getElementById('newPassword').value = '';
+      openModal('addAdvisorModal');
+    }
+    function closeAddAdvisor() { closeModal('addAdvisorModal'); }
+
+    async function addAdvisor() {
+      const name = document.getElementById('newName').value.trim();
+      const email = document.getElementById('newEmail').value.trim();
+      const password = document.getElementById('newPassword').value;
+      if (!name || !email || !password) {
+        const err = document.getElementById('addAdvisorError');
+        err.textContent = 'All fields are required';
+        err.style.display = 'block';
+        return;
+      }
+      const btn = document.getElementById('addAdvisorBtn');
+      btn.innerHTML = '<span class="spinner"></span>';
+      btn.disabled = true;
+      try {
+        const res = await fetch('/api/advisors', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, email, password }) });
+        const data = await res.json();
+        if (data.success) {
+          closeAddAdvisor();
+          loadAdvisors();
+          showToast('Advisor added successfully!');
+        } else {
+          const err = document.getElementById('addAdvisorError');
+          err.textContent = data.message || 'Failed to add advisor';
+          err.style.display = 'block';
+        }
+      } catch (e) {
+        const err = document.getElementById('addAdvisorError');
+        err.textContent = 'Error adding advisor';
+        err.style.display = 'block';
+      }
+      btn.innerHTML = 'Add Advisor';
+      btn.disabled = false;
+    }
+
+    // Reset Password Modal
+    function openResetPw(id) {
+      _resetPwId = id;
+      document.getElementById('resetPwInput').value = '';
+      openModal('resetPwModal');
+      setTimeout(() => document.getElementById('resetPwInput').focus(), 100);
+    }
+    function closeResetPw() { closeModal('resetPwModal'); }
+
+    async function confirmResetPw() {
+      const pw = document.getElementById('resetPwInput').value;
+      if (!pw) { showToast('Please enter a password', 'error'); return; }
+      const btn = document.getElementById('resetPwBtn');
+      btn.innerHTML = '<span class="spinner"></span>';
+      btn.disabled = true;
+      try {
+        const res = await fetch('/api/advisors/' + _resetPwId + '/password', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password: pw }) });
+        const data = await res.json();
+        closeResetPw();
+        if (data.success) showToast('Password reset successfully! 🔑');
+        else showToast('Failed to reset password', 'error');
+      } catch (e) { showToast('Error resetting password', 'error'); }
+      btn.innerHTML = '🔑 Reset Password';
+      btn.disabled = false;
+    }
+
+    // Delete Advisor Modal
+    function openDeleteAdvisor(id, name) {
+      _deleteAdvisorId = id;
+      _deleteAdvisorName = name;
+      document.getElementById('deleteAdvisorName').textContent = name;
+      openModal('deleteAdvisorModal');
+    }
+    function closeDeleteAdvisor() { closeModal('deleteAdvisorModal'); }
+
+    async function confirmDeleteAdvisor() {
+      const btn = document.getElementById('deleteAdvisorBtn');
+      btn.innerHTML = '<span class="spinner"></span>';
+      btn.disabled = true;
+      try {
+        await fetch('/api/advisors/' + _deleteAdvisorId, { method: 'DELETE' });
+        closeDeleteAdvisor();
+        loadAdvisors();
+        showToast(`${_deleteAdvisorName} deleted`);
+      } catch (e) { showToast('Error deleting advisor', 'error'); }
+      btn.innerHTML = '🗑️ Delete Advisor';
+      btn.disabled = false;
+    }
+
+    async function toggleAdvisor(id) {
+      await fetch('/api/advisors/' + id + '/toggle', { method: 'PATCH' });
+      loadAdvisors();
+      showToast('Advisor status updated');
+    }
+
+    // ─── SETTINGS ───
+    async function saveSettings() {
+      const email = document.getElementById('settingEmail').value;
+      const company = document.getElementById('settingCompany').value;
+      const password = document.getElementById('settingPassword').value;
+      try {
+        await fetch('/api/save-settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, company, password }) });
+        showToast('Settings saved! ⚙️');
+      } catch (e) { showToast('Error saving settings', 'error'); }
+    }
+
+    // ─── INSURERS ───
+    function renderInsurerCards() {
+      const container = document.getElementById('insurerCards');
+      container.innerHTML = configData.insurers.map(ins => `
+      <div class="insurer-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+          <strong style="font-size:15px;">${ins.name}</strong>
+          <label class="toggle-switch">
+            <input type="checkbox" ${ins.active ? 'checked' : ''} onchange="toggleInsurerActive(${ins.id}, this.checked)">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-sm btn-outline" onclick="openRenameInsurer(${ins.id})">✏️ Rename</button>
+          <button class="btn btn-sm btn-danger" onclick="openDeleteInsurer(${ins.id}, '${ins.name.replace(/'/g, "\\'")}')">🗑</button>
+        </div>
+      </div>
+    `).join('');
+    }
+
+    function toggleInsurerActive(id, val) {
+      const ins = configData.insurers.find(i => i.id === id);
+      if (ins) ins.active = val;
+    }
+
+    function openRenameInsurer(id) {
+      _renameInsurerId = id;
+      const ins = configData.insurers.find(i => i.id === id);
+      document.getElementById('renameInsurerInput').value = ins?.name || '';
+      openModal('renameInsurerModal');
+      setTimeout(() => document.getElementById('renameInsurerInput').focus(), 100);
+    }
+    function closeRenameInsurer() { closeModal('renameInsurerModal'); }
+    function confirmRenameInsurer() {
+      const name = document.getElementById('renameInsurerInput').value.trim();
+      if (!name) return;
+      const ins = configData.insurers.find(i => i.id === _renameInsurerId);
+      if (ins) { ins.name = name; renderInsurerCards(); saveConfig(); }
+      closeRenameInsurer();
+    }
+
+    function openDeleteInsurer(id, name) {
+      _deleteInsurerId = id;
+      document.getElementById('deleteInsurerName').textContent = name;
+      openModal('deleteInsurerModal');
+    }
+    function closeDeleteInsurer() { closeModal('deleteInsurerModal'); }
+    function confirmDeleteInsurer() {
+      configData.insurers = configData.insurers.filter(i => i.id !== _deleteInsurerId);
+      renderInsurerCards();
+      saveConfig();
+      closeDeleteInsurer();
+      showToast('Insurer deleted');
+    }
+
+    function addInsurer() { openModal('addInsurerModal'); document.getElementById('addInsurerInput').value = ''; setTimeout(() => document.getElementById('addInsurerInput').focus(), 100); }
+    function closeAddInsurer() { closeModal('addInsurerModal'); }
+    function confirmAddInsurer() {
+      const name = document.getElementById('addInsurerInput').value.trim();
+      if (!name) return;
+      const newId = Math.max(0, ...configData.insurers.map(i => i.id)) + 1;
+      configData.insurers.push({ id: newId, name, active: true });
+      renderInsurerCards();
+      saveConfig();
+      closeAddInsurer();
+      showToast('Insurer added!');
+    }
+
+    // ─── FEATURES ───
+    function renderFeatures() {
+      const insurerNames = configData.insurers.filter(i => i.active).map(i => i.name);
+      const body = document.getElementById('featuresBody');
+      body.innerHTML = `
+      <div style="overflow-x:auto;">
+        <table>
+          <thead>
+            <tr>
+              <th style="min-width:180px;">Feature</th>
+              <th>Visible</th>
+              ${insurerNames.map(n => `<th style="min-width:180px;">${n}</th>`).join('')}
+              <th>Delete</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${(configData.features || []).map((f, i) => `
+              <tr>
+                <td><input class="form-control" value="${f.name}" onchange="configData.features[${i}].name=this.value" style="font-size:13px;"></td>
+                <td>
+                  <label class="toggle-switch">
+                    <input type="checkbox" ${f.visible ? 'checked' : ''} onchange="configData.features[${i}].visible=this.checked">
+                    <span class="toggle-slider"></span>
+                  </label>
+                </td>
+                ${insurerNames.map(n => `<td><textarea class="form-control" rows="2" style="font-size:12px;" onchange="configData.features[${i}].values['${n}']=this.value">${f.values?.[n] || ''}</textarea></td>`).join('')}
+                <td><button class="btn btn-sm btn-danger" onclick="openDeleteFeature(${i})">🗑</button></td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
+    }
+
+    function addFeature() { openModal('addFeatureModal'); document.getElementById('addFeatureInput').value = ''; setTimeout(() => document.getElementById('addFeatureInput').focus(), 100); }
+    function closeAddFeature() { closeModal('addFeatureModal'); }
+    function confirmAddFeature() {
+      const name = document.getElementById('addFeatureInput').value.trim();
+      if (!name) return;
+      if (!configData.features) configData.features = [];
+      configData.features.push({ id: Date.now(), name, visible: true, values: {} });
+      renderFeatures();
+      closeAddFeature();
+    }
+
+    function openDeleteFeature(i) { _deleteFeatureIdx = i; openModal('deleteFeatureModal'); }
+    function closeDeleteFeature() { closeModal('deleteFeatureModal'); }
+    function confirmDeleteFeature() {
+      configData.features.splice(_deleteFeatureIdx, 1);
+      renderFeatures();
+      closeDeleteFeature();
+      showToast('Feature deleted');
+    }
+
+    // ─── RECOMMENDATIONS ───
+    function renderRecommendations() {
+      const body = document.getElementById('recommendationsBody');
+      const insurers = configData.insurers.filter(i => i.active);
+      body.innerHTML = insurers.map(ins => {
+        const bullets = configData.recommendations?.[ins.name] || [];
+        return `
+        <div class="card" style="margin-bottom:16px;">
+          <div class="card-header">${ins.name}</div>
+          <div class="card-body">
+            <div id="bullets_${ins.id}">
+              ${bullets.map((b, bi) => `
+                <div style="display:flex;gap:8px;margin-bottom:8px;">
+                  <input class="form-control" value="${b}" style="font-size:14px;" onchange="updateBullet('${ins.name}',${bi},this.value)">
+                  <button class="btn btn-sm btn-danger" onclick="removeBullet('${ins.name}',${bi})">✕</button>
+                </div>
+              `).join('')}
+            </div>
+            <button class="btn btn-sm btn-outline" onclick="addBullet('${ins.name}')">+ Add Point</button>
+          </div>
+        </div>
+      `;
+      }).join('');
+      if (configData.advisor_note !== undefined) document.getElementById('globalNote').value = configData.advisor_note;
+    }
+
+    function updateBullet(insName, idx, val) {
+      if (!configData.recommendations) configData.recommendations = {};
+      if (!configData.recommendations[insName]) configData.recommendations[insName] = [];
+      configData.recommendations[insName][idx] = val;
+    }
+    function addBullet(insName) {
+      if (!configData.recommendations) configData.recommendations = {};
+      if (!configData.recommendations[insName]) configData.recommendations[insName] = [];
+      configData.recommendations[insName].push('New point');
+      renderRecommendations();
+    }
+    function removeBullet(insName, idx) {
+      configData.recommendations[insName].splice(idx, 1);
+      renderRecommendations();
+    }
+
+    // ─── SAVE CONFIG ───
+    async function saveConfig() {
+      configData.advisor_note = document.getElementById('globalNote')?.value || configData.advisor_note;
+      try {
+        const res = await fetch('/api/save-config', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(configData) });
+        const data = await res.json();
+        if (data.success) showToast('Config saved! 💾');
+      } catch (e) { showToast('Error saving config', 'error'); }
+    }
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,1402 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>increMint — Health Insurance Quote</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet">
+  <style>
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --green: #4CAF50;
+      --green-dark: #388E3C;
+      --green-light: #E8F5E9;
+      --gray: #f5f5f5;
+      --gray-border: #e0e0e0;
+      --gray-text: #757575;
+      --dark: #212121;
+      --error: #f44336;
+      --white: #ffffff;
+      --shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+      background: #f9fafb;
+      color: var(--dark);
+      padding-top: 64px;
+    }
+
+    /* NAVBAR */
+    .navbar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      background: var(--white);
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 28px;
+      border-bottom: 3px solid var(--green);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    }
+
+    .navbar-logo img {
+      height: 36px;
+    }
+
+    .navbar-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .navbar-right a {
+      text-decoration: none;
+    }
+
+    .btn-nav-link {
+      color: var(--gray-text);
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    .btn-nav-link:hover {
+      color: var(--green);
+    }
+
+    .btn-green {
+      background: var(--green);
+      color: white;
+      padding: 8px 18px;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 13px;
+      border: none;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background 0.2s;
+    }
+
+    .btn-green:hover {
+      background: var(--green-dark);
+    }
+
+    /* PAGE HEADER */
+    .page-header {
+      max-width: 780px;
+      margin: 32px auto 0;
+      padding: 0 20px 24px;
+      text-align: center;
+    }
+
+    .page-header h1 {
+      font-size: 28px;
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+
+    .page-header p {
+      color: var(--gray-text);
+      font-size: 15px;
+    }
+
+    /* PROGRESS BAR */
+    .progress-wrap {
+      max-width: 780px;
+      margin: 0 auto 20px;
+      padding: 0 20px;
+    }
+
+    .progress-bar-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--gray-text);
+      margin-bottom: 6px;
+    }
+
+    .progress-bar-track {
+      background: var(--gray-border);
+      border-radius: 10px;
+      height: 8px;
+      overflow: hidden;
+    }
+
+    .progress-bar-fill {
+      background: var(--green);
+      height: 100%;
+      border-radius: 10px;
+      transition: width 0.4s ease;
+    }
+
+    /* CARDS */
+    .container {
+      max-width: 780px;
+      margin: 0 auto;
+      padding: 0 20px 60px;
+    }
+
+    .section-card {
+      background: var(--white);
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+      margin-bottom: 20px;
+      overflow: hidden;
+    }
+
+    .section-card-header {
+      background: var(--green);
+      color: white;
+      padding: 16px 22px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .section-card-header h2 {
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    .section-card-body {
+      padding: 24px;
+      display: none;
+    }
+
+    .section-card.open .section-card-body {
+      display: block;
+    }
+
+    .chevron {
+      transition: transform 0.2s;
+      font-style: normal;
+    }
+
+    .section-card.open .chevron {
+      transform: rotate(180deg);
+    }
+
+    /* FORM ELEMENTS */
+    .form-grid {
+      display: grid;
+      gap: 16px;
+    }
+
+    .form-grid-3 {
+      grid-template-columns: repeat(3, 1fr);
+    }
+
+    .form-grid-2 {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    @media(max-width:640px) {
+
+      .form-grid-3,
+      .form-grid-2 {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 16px;
+    }
+
+    .form-label {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--gray-text);
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+
+    .form-control {
+      padding: 11px 14px;
+      border: 1.5px solid var(--gray-border);
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: inherit;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      width: 100%;
+    }
+
+    .form-control:focus {
+      outline: none;
+      border-color: var(--green);
+      box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.12);
+    }
+
+    .form-control.invalid {
+      border-color: var(--error);
+      background: #fff5f5;
+    }
+
+    .error-msg {
+      font-size: 11px;
+      color: var(--error);
+      font-weight: 600;
+      display: none;
+      margin-top: 2px;
+    }
+
+    .form-control.invalid+.error-msg {
+      display: block;
+    }
+
+    /* BUTTONS */
+    .btn {
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 14px;
+      cursor: pointer;
+      border: none;
+      transition: 0.2s;
+      font-family: inherit;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-primary {
+      background: var(--green);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: var(--green-dark);
+      transform: translateY(-1px);
+    }
+
+    .btn-full {
+      width: 100%;
+      justify-content: center;
+    }
+
+    .btn-outline {
+      background: white;
+      border: 1.5px solid var(--green);
+      color: var(--green-dark);
+    }
+
+    .btn-outline:hover {
+      background: var(--green-light);
+    }
+
+    .btn-sm {
+      padding: 7px 14px;
+      font-size: 13px;
+    }
+
+    .btn-danger {
+      background: #ffebee;
+      color: var(--error);
+      border: 1.5px solid #ffcdd2;
+    }
+
+    /* MEMBER CARD */
+    .member-card {
+      border: 1.5px solid var(--gray-border);
+      border-radius: 10px;
+      margin-bottom: 14px;
+      overflow: hidden;
+      transition: border-color 0.2s;
+    }
+
+    .member-card:hover {
+      border-color: var(--green);
+    }
+
+    .member-card-header {
+      padding: 14px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      background: #fafafa;
+    }
+
+    .member-card-header-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .member-avatar {
+      width: 32px;
+      height: 32px;
+      background: var(--green-light);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+    }
+
+    .member-name {
+      font-weight: 700;
+      font-size: 15px;
+    }
+
+    .member-meta {
+      font-size: 13px;
+      color: var(--gray-text);
+    }
+
+    .member-card-body {
+      padding: 18px;
+      border-top: 1px solid var(--gray-border);
+      display: none;
+    }
+
+    .member-card.open .member-card-body {
+      display: block;
+    }
+
+    .member-card.open .member-card-header {
+      background: var(--green-light);
+    }
+
+    /* DISEASE CHECKBOXES */
+    .disease-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-top: 8px;
+    }
+
+    @media(max-width:480px) {
+      .disease-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    .disease-pill {
+      border: 1.5px solid var(--gray-border);
+      border-radius: 8px;
+      padding: 9px 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+      transition: 0.15s;
+      background: white;
+    }
+
+    .disease-pill input {
+      width: 15px;
+      height: 15px;
+      accent-color: var(--green);
+    }
+
+    .disease-pill:hover {
+      border-color: var(--green);
+      background: var(--green-light);
+    }
+
+    .disease-pill.selected {
+      border-color: var(--green);
+      background: var(--green-light);
+      color: var(--green-dark);
+    }
+
+    /* TOGGLE GROUP (Fresh/Port) */
+    .toggle-group {
+      display: flex;
+      background: #f0f0f0;
+      padding: 3px;
+      border-radius: 8px;
+      width: fit-content;
+      gap: 3px;
+    }
+
+    .toggle-btn {
+      padding: 8px 20px;
+      border-radius: 6px;
+      border: none;
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+      color: var(--gray-text);
+      background: transparent;
+      font-family: inherit;
+    }
+
+    .toggle-btn.active {
+      background: white;
+      color: var(--green-dark);
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    /* PORT DETAILS */
+    .port-details {
+      margin-top: 14px;
+      padding: 16px;
+      border: 1px dashed var(--gray-border);
+      border-radius: 8px;
+      background: #fafafa;
+      display: none;
+      animation: fadeIn 0.2s ease;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(-4px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* INSURER CARDS */
+    .insurer-company-block {
+      margin-bottom: 20px;
+      border: 1.5px solid var(--gray-border);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .insurer-company-header {
+      background: #f8f9fa;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-bottom: 1px solid var(--gray-border);
+    }
+
+    .insurer-logo {
+      width: 32px;
+      height: 32px;
+      object-fit: contain;
+      border: 1px solid #eee;
+      border-radius: 4px;
+      background: white;
+    }
+
+    .insurer-company-name {
+      font-weight: 700;
+      font-size: 15px;
+    }
+
+    .plan-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      border-bottom: 1px solid #f0f0f0;
+      cursor: pointer;
+      transition: background 0.15s;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .plan-row:last-child {
+      border-bottom: none;
+    }
+
+    .plan-row:hover {
+      background: #f9fafb;
+    }
+
+    .plan-row.selected {
+      background: var(--green-light);
+    }
+
+    .plan-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .plan-checkbox {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--green);
+    }
+
+    .plan-name {
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    .plan-premiums {
+      display: none;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .plan-row.selected .plan-premiums {
+      display: flex;
+    }
+
+    .prem-field {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .prem-field label {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--gray-text);
+      text-transform: uppercase;
+    }
+
+    .prem-field input {
+      width: 100px;
+      padding: 8px 10px;
+      border: 1.5px solid var(--gray-border);
+      border-radius: 6px;
+      font-size: 13px;
+      font-family: inherit;
+    }
+
+    .prem-field input:focus {
+      outline: none;
+      border-color: var(--green);
+    }
+
+    /* SUCCESS */
+    .success-screen {
+      display: none;
+      min-height: 80vh;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 20px;
+    }
+
+    .success-card {
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+      padding: 48px 40px;
+      text-align: center;
+      max-width: 460px;
+      width: 100%;
+    }
+
+    .success-icon {
+      width: 64px;
+      height: 64px;
+      background: var(--green-light);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 20px;
+      font-size: 28px;
+    }
+
+    /* SPINNER */
+    .spinner {
+      display: inline-block;
+      width: 18px;
+      height: 18px;
+      border: 2px solid rgba(255, 255, 255, 0.4);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    .section-actions {
+      margin-top: 20px;
+      display: flex;
+      gap: 10px;
+    }
+
+    /* ── ANIMATIONS ── */
+    @keyframes slideDown {
+      from {
+        opacity: 0;
+        transform: translateY(-16px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes slideUp {
+      from {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      to {
+        opacity: 0;
+        transform: translateY(-16px);
+      }
+    }
+
+    @keyframes slideInRight {
+      from {
+        opacity: 0;
+        transform: translateX(32px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    @keyframes slideOutRight {
+      from {
+        opacity: 1;
+        transform: translateX(0);
+      }
+
+      to {
+        opacity: 0;
+        transform: translateX(32px);
+      }
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes modalIn {
+      from {
+        opacity: 0;
+        transform: scale(0.92) translateY(12px);
+      }
+
+      to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+      }
+    }
+
+    @keyframes modalOut {
+      from {
+        opacity: 1;
+        transform: scale(1);
+      }
+
+      to {
+        opacity: 0;
+        transform: scale(0.92);
+      }
+    }
+
+    .member-card {
+      animation: slideDown 0.28s ease;
+    }
+
+    .member-card.removing {
+      animation: slideUp 0.22s ease forwards;
+    }
+
+    .section-card {
+      animation: fadeInUp 0.4s ease both;
+    }
+
+    .section-card:nth-child(1) {
+      animation-delay: 0ms;
+    }
+
+    .section-card:nth-child(2) {
+      animation-delay: 80ms;
+    }
+
+    .section-card:nth-child(3) {
+      animation-delay: 160ms;
+    }
+
+    .section-card:nth-child(4) {
+      animation-delay: 240ms;
+    }
+
+    /* Button scale on hover */
+    .btn:hover,
+    .btn-green:hover,
+    .toggle-btn:hover {
+      transform: scale(1.03);
+    }
+
+    .btn-primary:hover {
+      transform: scale(1.03) translateY(-1px);
+    }
+
+    /* Section card body smooth reveal */
+    .section-card-body {
+      padding: 24px;
+      display: none;
+    }
+
+    /* Port details smooth slide */
+    .port-details {
+      margin-top: 14px;
+      padding: 0 16px;
+      border: 1px dashed var(--gray-border);
+      border-radius: 8px;
+      background: #fafafa;
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.35s ease, padding 0.25s ease, opacity 0.25s ease;
+      opacity: 0;
+    }
+
+    .port-details.open {
+      max-height: 400px;
+      padding: 16px;
+      opacity: 1;
+    }
+
+    /* Standalone submit button */
+    .submit-btn-wrap {
+      max-width: 780px;
+      margin: 0 auto;
+      padding: 0 20px 60px;
+    }
+
+    /* Toast notifications */
+    .toast-container {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .toast {
+      padding: 13px 20px;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 13px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      animation: slideInRight 0.3s ease;
+      min-width: 240px;
+      max-width: 340px;
+    }
+
+    .toast.hiding {
+      animation: slideOutRight 0.3s ease forwards;
+    }
+
+    .toast-success {
+      background: #fff;
+      border-left: 4px solid #4CAF50;
+      color: #2E7D32;
+    }
+
+    .toast-error {
+      background: #fff;
+      border-left: 4px solid #f44336;
+      color: #c62828;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <div class="navbar-logo">
+      <a href="https://www.myincremint.com"><img src="/logo.png" alt="increMint"></a>
+    </div>
+    <div class="navbar-right" id="navbarRight">
+      <!-- filled by JS -->
+    </div>
+  </nav>
+
+  <!-- PAGE HEADER -->
+  <div class="page-header">
+    <h1>📋 Health Insurance Quote</h1>
+    <p>Fill in the details below to generate an instant professional quotation</p>
+  </div>
+
+  <!-- PROGRESS BAR -->
+  <div class="progress-wrap">
+    <div class="progress-bar-label">
+      <span id="progressLabel">Step 1 of 4: Contact Details</span>
+      <span id="progressPct">0%</span>
+    </div>
+    <div class="progress-bar-track">
+      <div class="progress-bar-fill" id="progressFill" style="width:10%;"></div>
+    </div>
+  </div>
+
+  <!-- MAIN FORM -->
+  <div class="container" id="formContainer">
+
+    <!-- SECTION 1: CONTACT DETAILS -->
+    <div class="section-card open" id="sec_contact">
+      <div class="section-card-header" onclick="toggleCard('sec_contact')">
+        <h2>👤 &nbsp;Contact Details</h2>
+        <i class="chevron">▾</i>
+      </div>
+      <div class="section-card-body">
+        <div class="form-grid form-grid-3">
+          <div class="form-group">
+            <label class="form-label">Full Name *</label>
+            <input type="text" id="customerName" class="form-control" placeholder="John Doe"
+              oninput="validateField('customerName')">
+            <div class="error-msg">Name must be at least 3 characters</div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Phone Number *</label>
+            <input type="tel" id="customerPhone" class="form-control" placeholder="10-digit number"
+              oninput="validateField('customerPhone')">
+            <div class="error-msg">Valid 10-digit phone required</div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Email Address</label>
+            <input type="email" id="customerEmail" class="form-control" placeholder="Optional">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 2: MEMBERS -->
+    <div class="section-card" id="sec_members">
+      <div class="section-card-header" onclick="toggleCard('sec_members')">
+        <h2>👨‍👩‍👧‍👦 &nbsp;Members to Insure</h2>
+        <div style="display:flex; align-items:center; gap:12px;">
+          <button class="btn btn-sm btn-outline" onclick="event.stopPropagation(); addMember()"
+            style="background:rgba(255,255,255,0.15);border-color:white;color:white; font-size:12px;">+ Add
+            Member</button>
+          <i class="chevron">▾</i>
+        </div>
+      </div>
+      <div class="section-card-body">
+        <div id="membersContainer"></div>
+      </div>
+    </div>
+
+    <!-- SECTION 3: PLANS (advisor only) -->
+    <div class="section-card" id="sec_plans" style="display:none;">
+      <div class="section-card-header" onclick="toggleCard('sec_plans')">
+        <h2>🏢 &nbsp;Available Plans &amp; Premiums</h2>
+        <i class="chevron">▾</i>
+      </div>
+      <div class="section-card-body">
+        <p style="color:var(--gray-text); font-size:14px; margin-bottom:20px;">Select the plans that best fit your
+          customer and enter the premiums.</p>
+        <div id="insurersList"></div>
+      </div>
+    </div>
+
+    <!-- SECTION 4: ADVISOR NOTE -->
+    <div class="section-card" id="sec_note">
+      <div class="section-card-header" onclick="toggleCard('sec_note')">
+        <h2>💬 &nbsp;Advisor's Recommendation Note</h2>
+        <i class="chevron">▾</i>
+      </div>
+      <div class="section-card-body">
+        <div class="form-group">
+          <label class="form-label">Recommendation Note</label>
+          <textarea id="advisorNote" class="form-control" rows="5"
+            placeholder="Why do you recommend these plans? (This note will appear at the bottom of the quote PDF)"></textarea>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- STANDALONE SUBMIT BUTTON -->
+  <div class="submit-btn-wrap">
+    <button class="btn btn-primary btn-full" id="submitBtn" onclick="submitForm()"
+      style="padding:16px; font-size:16px; border-radius:12px; box-shadow: 0 4px 14px rgba(76,175,80,0.35);">
+      🚀 Generate &amp; Send Quote
+    </button>
+  </div>
+
+  <!-- SUCCESS SCREEN -->
+  <div class="success-screen" id="successScreen">
+    <div class="success-card">
+      <div class="success-icon">✅</div>
+      <h2 style="font-size:22px; font-weight:800; margin-bottom:10px;">Quote Submitted! 🎉</h2>
+      <p id="successMsg" style="color:var(--gray-text); font-size:14px; line-height:1.6; margin-bottom:20px;"></p>
+      <div
+        style="background:var(--green-light); border-radius:10px; padding:12px 20px; margin-bottom:28px; display:inline-block;">
+        <div style="font-size:11px; color:var(--gray-text); font-weight:700; text-transform:uppercase;">Quote ID</div>
+        <div id="successQuoteId" style="font-size:22px; font-weight:800; color:var(--green-dark);"></div>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:10px;">
+        <button class="btn btn-primary btn-full" onclick="resetForm()">📝 Submit Another Quote</button>
+        <a href="https://www.myincremint.com" class="btn btn-outline btn-full">🌐 Back to Main Website</a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let memberCount = 0;
+    let advisorData = null;
+    let configData = null;
+
+    const INSURER_GROUPS = [
+      { company: "ICICI Lombard", logo: "/logos/icici_lombard.jpg", plans: ["Elevate", "Elevate Plus"] },
+      { company: "Tata AIG", logo: "/logos/tata_aig.jpg", plans: ["Medicare Select", "Medicare Premier"] },
+      { company: "Care Health", logo: "/logos/care_health.jpg", plans: ["Supreme", "Supreme Direct"] },
+      { company: "Niva Bupa", logo: "/logos/niva_reassure3.jpg", plans: ["ReAssure 3.0", "Aspire Platinum"] },
+      { company: "HDFC ERGO", logo: "/logos/hdfc_ergo.jpg", plans: ["Optima Secure", "Optima Secure Global"] },
+      { company: "Star Health", logo: "/logos/star_health.jpg", plans: ["Comprehensive", "Family Health Optima"] }
+    ];
+
+    const DISEASES = ['Diabetes', 'High BP', 'Heart Disease', 'Thyroid', 'Asthma', 'Cancer', 'Kidney Disease', 'Other'];
+
+    window.onload = async () => {
+      await loadAdvisor();
+      await loadConfig();
+      addMember();
+      updateProgress();
+    };
+
+    async function loadAdvisor() {
+      try {
+        const res = await fetch('/api/me');
+        const data = await res.json();
+        if (data.loggedIn !== false && data.id) {
+          advisorData = data;
+          document.getElementById('navbarRight').innerHTML = `
+          <span style="font-size:13px;color:var(--gray-text);">Advisor: <strong style="color:var(--green-dark);">${data.name}</strong></span>
+          <a href="/dashboard" class="btn btn-sm btn-outline">Dashboard</a>
+          <a href="/api/logout" class="btn btn-sm" style="color:var(--gray-text);">Logout</a>
+        `;
+          document.getElementById('sec_plans').style.display = 'block';
+        } else {
+          document.getElementById('navbarRight').innerHTML = `
+          <a href="https://www.myincremint.com" class="btn-nav-link">Customer Portal</a>
+          <a href="/dashboard" class="btn-green">Advisor Login</a>
+        `;
+        }
+      } catch (e) {
+        document.getElementById('navbarRight').innerHTML = `
+        <a href="https://www.myincremint.com" class="btn-nav-link">Customer Portal</a>
+        <a href="/dashboard" class="btn-green">Advisor Login</a>
+      `;
+      }
+    }
+
+    async function loadConfig() {
+      try {
+        const res = await fetch('/api/config');
+        configData = await res.json();
+        buildInsurersList();
+        if (configData.advisor_note) document.getElementById('advisorNote').value = configData.advisor_note;
+      } catch (e) { }
+    }
+
+    function updateProgress() {
+      const name = document.getElementById('customerName').value.trim();
+      const phone = document.getElementById('customerPhone').value.trim();
+      const hasContact = name.length >= 3 && /^[0-9]{10}$/.test(phone);
+      const hasMembers = memberCount > 0;
+      let pct = 10;
+      if (hasContact) pct = 40;
+      if (hasContact && hasMembers) pct = 70;
+      document.getElementById('progressFill').style.width = pct + '%';
+      document.getElementById('progressPct').textContent = pct + '%';
+    }
+
+    function toggleCard(id) {
+      const card = document.getElementById(id);
+      card.classList.toggle('open');
+    }
+
+    function openCard(id) {
+      document.getElementById(id).classList.add('open');
+    }
+
+    // VALIDATION
+    function validateField(id) {
+      const el = document.getElementById(id);
+      let valid = true;
+      if (id === 'customerName') valid = el.value.trim().length >= 3;
+      if (id === 'customerPhone') valid = /^[0-9]{10}$/.test(el.value.trim());
+      el.classList.toggle('invalid', !valid);
+      updateProgress();
+      return valid;
+    }
+
+    // INSURER LIST
+    function buildInsurersList() {
+      const container = document.getElementById('insurersList');
+      container.innerHTML = INSURER_GROUPS.map((group, gIdx) => `
+      <div class="insurer-company-block">
+        <div class="insurer-company-header">
+          <img src="${group.logo}" class="insurer-logo" alt="${group.company}" onerror="this.style.display='none'">
+          <span class="insurer-company-name">${group.company}</span>
+        </div>
+        ${group.plans.map((plan, pIdx) => {
+        const id = `plan_${gIdx}_${pIdx}`;
+        return `
+            <div class="plan-row" id="row_${id}" onclick="togglePlan('${id}')">
+              <div class="plan-left">
+                <input type="checkbox" class="plan-checkbox" id="chk_${id}" onclick="event.stopPropagation(); updatePlanRow('${id}')">
+                <span class="plan-name">${plan}</span>
+              </div>
+              <div class="plan-premiums" id="prems_${id}" onclick="event.stopPropagation()">
+                <div class="prem-field"><label>1 Yr Premium</label><input type="number" id="p1_${id}" placeholder="₹"></div>
+                <div class="prem-field"><label>2 Yr Premium</label><input type="number" id="p2_${id}" placeholder="₹"></div>
+                <div class="prem-field"><label>3 Yr Premium</label><input type="number" id="p3_${id}" placeholder="₹"></div>
+              </div>
+            </div>
+          `;
+      }).join('')}
+      </div>
+    `).join('');
+    }
+
+    function togglePlan(id) {
+      const chk = document.getElementById('chk_' + id);
+      chk.checked = !chk.checked;
+      updatePlanRow(id);
+    }
+
+    function updatePlanRow(id) {
+      const chk = document.getElementById('chk_' + id);
+      const row = document.getElementById('row_' + id);
+      row.classList.toggle('selected', chk.checked);
+    }
+
+    // MEMBERS
+    function addMember() {
+      memberCount++;
+      const id = memberCount;
+      const div = document.createElement('div');
+      div.className = 'member-card';
+      div.id = 'mb_' + id;
+      div.innerHTML = `
+      <div class="member-card-header" onclick="toggleMember(${id})">
+        <div class="member-card-header-left">
+          <div class="member-avatar">👤</div>
+          <div>
+            <div class="member-name" id="mSum_${id}">Member ${id}</div>
+            <div class="member-meta" id="mMeta_${id}"></div>
+          </div>
+        </div>
+        <span id="marr_${id}">▾</span>
+      </div>
+      <div class="member-card-body">
+        <div class="form-grid form-grid-3" style="margin-bottom:0;">
+          <div class="form-group">
+            <label class="form-label">Full Name</label>
+            <input type="text" id="mName_${id}" class="form-control" placeholder="Member name" oninput="updateMemberSummary(${id})">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Relation</label>
+            <select id="mRelation_${id}" class="form-control" onchange="updateMemberSummary(${id})">
+              <option>Self</option><option>Spouse</option><option>Son</option>
+              <option>Daughter</option><option>Father</option><option>Mother</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Date of Birth</label>
+            <input type="date" id="mDob_${id}" class="form-control" onchange="updateMemberSummary(${id})">
+          </div>
+        </div>
+        <div class="form-grid form-grid-2">
+          <div class="form-group">
+            <label class="form-label">City / Pincode</label>
+            <input type="text" id="mCity_${id}" class="form-control" placeholder="e.g. Mumbai or 400001">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Sum Assured</label>
+            <select id="mSA_${id}" class="form-control">
+              <option value="5L">5 Lakh</option>
+              <option value="10L">10 Lakh</option>
+              <option value="15L">15 Lakh</option>
+              <option value="20L">20 Lakh</option>
+              <option value="25L">25 Lakh</option>
+              <option value="50L">50 Lakh</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Medical Details -->
+        <details style="margin-top:4px;">
+          <summary style="cursor:pointer; font-weight:700; font-size:14px; color:var(--green-dark); padding:8px 0;">
+            ＋ Add Medical Details
+          </summary>
+          <div style="margin-top:14px;">
+            <div class="form-group">
+              <label class="form-label">Pre-existing Conditions</label>
+              <div class="disease-grid">
+                ${DISEASES.map(d => `
+                  <div class="disease-pill" onclick="toggleDisease(this)">
+                    <input type="checkbox" data-disease="${d}">
+                    <span>${d}</span>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" style="margin-bottom:8px;">Any Surgeries?</label>
+              <div style="display:flex; gap:8px;">
+                <label style="display:flex; align-items:center; gap:6px; font-size:14px; cursor:pointer;">
+                  <input type="radio" name="surg_${id}" value="no" checked onchange="toggleSurgery(${id}, false)"> No
+                </label>
+                <label style="display:flex; align-items:center; gap:6px; font-size:14px; cursor:pointer;">
+                  <input type="radio" name="surg_${id}" value="yes" onchange="toggleSurgery(${id}, true)"> Yes
+                </label>
+              </div>
+              <div id="surgDetails_${id}" style="display:none; margin-top:10px;">
+                <div class="form-grid form-grid-2">
+                  <div class="form-group" style="margin:0;">
+                    <label class="form-label">Surgery Name</label>
+                    <input type="text" id="surgName_${id}" class="form-control" placeholder="e.g. Angioplasty">
+                  </div>
+                  <div class="form-group" style="margin:0;">
+                    <label class="form-label">Year of Surgery</label>
+                    <input type="number" id="surgYear_${id}" class="form-control" placeholder="e.g. 2019">
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-group" style="margin-bottom:0;">
+              <label class="form-label">Policy Type</label>
+              <div class="toggle-group">
+                <button class="toggle-btn active" id="btnFresh_${id}" onclick="setPolicyType(${id},'fresh')">🆕 Fresh</button>
+                <button class="toggle-btn" id="btnPort_${id}" onclick="setPolicyType(${id},'port')">🔄 Port</button>
+              </div>
+              <input type="hidden" id="policyType_${id}" value="fresh">
+              <div class="port-details" id="portDet_${id}">
+                <div class="form-grid form-grid-2" style="margin-bottom:0;">
+                  <div class="form-group" style="margin:0;">
+                    <label class="form-label">Current Insurer</label>
+                    <input type="text" id="pIns_${id}" class="form-control" placeholder="e.g. Star Health">
+                  </div>
+                  <div class="form-group" style="margin:0;">
+                    <label class="form-label">Policy Expiry Date</label>
+                    <input type="date" id="pExp_${id}" class="form-control">
+                  </div>
+                  <div class="form-group" style="margin:0;">
+                    <label class="form-label">Current Sum Assured</label>
+                    <input type="text" id="pSA_${id}" class="form-control" placeholder="e.g. 5L">
+                  </div>
+                  <div class="form-group" style="margin:0;">
+                    <label class="form-label">Claim Last Year?</label>
+                    <select id="pClaim_${id}" class="form-control" onchange="toggleClaimAmt(${id})">
+                      <option value="no">No</option>
+                      <option value="yes">Yes</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="form-group" id="claimAmtGrp_${id}" style="display:none; margin-top:10px; margin-bottom:0;">
+                  <label class="form-label">Claim Amount (₹)</label>
+                  <input type="number" id="pClaimAmt_${id}" class="form-control" placeholder="e.g. 50000">
+                </div>
+              </div>
+            </div>
+          </div>
+        </details>
+
+        ${id > 1 ? `<button class="btn btn-danger btn-sm" onclick="removeMember(${id})" style="margin-top:16px;">✕ Remove Member</button>` : ''}
+      </div>
+    `;
+      const container = document.getElementById('membersContainer');
+      container.prepend(div);
+      if (id === 1) toggleMember(1);
+      updateProgress();
+      openCard('sec_members');
+    }
+
+    function toggleMember(id) {
+      const card = document.getElementById('mb_' + id);
+      const isOpen = card.classList.contains('open');
+      document.querySelectorAll('.member-card').forEach(c => {
+        c.classList.remove('open');
+        const mid = c.id.split('_')[1];
+        const arEl = document.getElementById('marr_' + mid);
+        if (arEl) arEl.textContent = '▾';
+      });
+      if (!isOpen) {
+        card.classList.add('open');
+        document.getElementById('marr_' + id).textContent = '▴';
+      }
+    }
+
+    function updateMemberSummary(id) {
+      const name = document.getElementById('mName_' + id).value || `Member ${id}`;
+      const rel = document.getElementById('mRelation_' + id).value;
+      const dob = document.getElementById('mDob_' + id).value;
+      let age = '';
+      if (dob) {
+        age = Math.floor((Date.now() - new Date(dob)) / (1000 * 60 * 60 * 24 * 365.25));
+      }
+      document.getElementById('mSum_' + id).textContent = name;
+      document.getElementById('mMeta_' + id).textContent = (age ? `${age} yrs • ` : '') + rel;
+      updateProgress();
+    }
+
+    function toggleDisease(el) {
+      const cb = el.querySelector('input');
+      cb.checked = !cb.checked;
+      el.classList.toggle('selected', cb.checked);
+    }
+
+    function toggleSurgery(id, show) {
+      document.getElementById('surgDetails_' + id).style.display = show ? 'block' : 'none';
+    }
+
+    function setPolicyType(id, type) {
+      document.getElementById('policyType_' + id).value = type;
+      document.getElementById('btnFresh_' + id).classList.toggle('active', type === 'fresh');
+      document.getElementById('btnPort_' + id).classList.toggle('active', type === 'port');
+      const portEl = document.getElementById('portDet_' + id);
+      portEl.classList.toggle('open', type === 'port');
+    }
+
+    function toggleClaimAmt(id) {
+      const val = document.getElementById('pClaim_' + id).value;
+      document.getElementById('claimAmtGrp_' + id).style.display = val === 'yes' ? 'block' : 'none';
+    }
+
+    function removeMember(id) {
+      const el = document.getElementById('mb_' + id);
+      if (!el) return;
+      el.classList.add('removing');
+      setTimeout(() => { el.remove(); updateProgress(); }, 220);
+    }
+
+    // SUBMIT
+    async function submitForm() {
+      if (!validateField('customerName') || !validateField('customerPhone')) {
+        openCard('sec_contact');
+        return;
+      }
+
+      const btn = document.getElementById('submitBtn');
+      btn.innerHTML = '<span class="spinner"></span> Processing...';
+      btn.disabled = true;
+
+      const members = [];
+      for (let i = 1; i <= memberCount; i++) {
+        const mb = document.getElementById('mb_' + i);
+        if (!mb) continue;
+        const dob = document.getElementById('mDob_' + i).value;
+        const age = dob ? Math.floor((Date.now() - new Date(dob)) / (1000 * 60 * 60 * 24 * 365.25)) : '';
+        const diseases = Array.from(mb.querySelectorAll('input[data-disease]:checked')).map(cb => ({ name: cb.dataset.disease }));
+        const surgChecked = mb.querySelector(`input[name="surg_${i}"][value="yes"]`)?.checked;
+
+        members.push({
+          name: document.getElementById('mName_' + i)?.value || '',
+          relation: document.getElementById('mRelation_' + i)?.value || 'Self',
+          dob, age,
+          city: document.getElementById('mCity_' + i)?.value || '',
+          sum_assured: document.getElementById('mSA_' + i)?.value || '5L',
+          policy_type: document.getElementById('policyType_' + i)?.value || 'fresh',
+          diseases,
+          surgeries: surgChecked ? [{ name: document.getElementById('surgName_' + i)?.value || '', year: document.getElementById('surgYear_' + i)?.value || '' }] : [],
+          port_details: document.getElementById('policyType_' + i)?.value === 'port' ? {
+            current_insurer: document.getElementById('pIns_' + i)?.value || '',
+            expiry_date: document.getElementById('pExp_' + i)?.value || '',
+            current_sa: document.getElementById('pSA_' + i)?.value || '',
+            claim_last_year: document.getElementById('pClaim_' + i)?.value || 'no',
+            claim_amount: document.getElementById('pClaimAmt_' + i)?.value || ''
+          } : null
+        });
+      }
+
+      const insurers = [];
+      INSURER_GROUPS.forEach((g, gIdx) => {
+        g.plans.forEach((plan, pIdx) => {
+          const sid = `plan_${gIdx}_${pIdx}`;
+          const chk = document.getElementById('chk_' + sid);
+          if (chk?.checked) {
+            insurers.push({
+              name: `${g.company} – ${plan}`,
+              premium_1yr: document.getElementById('p1_' + sid)?.value || '',
+              premium_2yr: document.getElementById('p2_' + sid)?.value || '',
+              premium_3yr: document.getElementById('p3_' + sid)?.value || ''
+            });
+          }
+        });
+      });
+
+      const payload = {
+        customer_name: document.getElementById('customerName').value,
+        customer_phone: document.getElementById('customerPhone').value,
+        customer_email: document.getElementById('customerEmail').value,
+        members, insurers,
+        advisor_note: document.getElementById('advisorNote').value
+      };
+
+      try {
+        const res = await fetch('/api/submit-quote', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (data.success) {
+          showSuccess(data.quoteId);
+        } else {
+          alert('Error: ' + (data.message || 'Submission failed'));
+          btn.innerHTML = '🚀 Generate &amp; Send Quote';
+          btn.disabled = false;
+        }
+      } catch (e) {
+        alert('Network error. Please try again.');
+        btn.innerHTML = '🚀 Generate &amp; Send Quote';
+        btn.disabled = false;
+      }
+    }
+
+    function showSuccess(quoteId) {
+      document.getElementById('formContainer').style.display = 'none';
+      document.querySelector('.page-header').style.display = 'none';
+      document.querySelector('.progress-wrap').style.display = 'none';
+      document.getElementById('successScreen').style.display = 'flex';
+      document.getElementById('successQuoteId').textContent = quoteId;
+      document.getElementById('successMsg').textContent = advisorData
+        ? 'Professional quote generated and emailed to you successfully.'
+        : 'Thank you! We have received your request and will get back to you soon.';
+    }
+
+    function resetForm() { window.location.reload(); }
+  </script>
+</body>
+
+</html>
