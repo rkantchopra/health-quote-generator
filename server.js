@@ -449,6 +449,20 @@ app.post('/generate', async (req, res) => {
         const dd = String(dateObj.getDate()).padStart(2, '0');
         const quoteId = `TK${yyyy}${mm}${dd}${Math.floor(1000 + Math.random() * 9000)}`;
         const quoteData = { ...body, quote_id: quoteId, date: `${dd}-${mm}-${yyyy}` };
+
+        // Save to DB so it appears in admin quote list
+        try {
+            await run(`INSERT INTO quotes
+                (quote_id, customer_name, customer_phone, customer_email, advisor_id, advisor_name, submitted_by, members_json, insurers_json, advisor_note, submitted_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                [quoteId, body.customer_name || 'Unknown', body.customer_phone || null,
+                 null, null, body.advisor_name || 'RM Dashboard', 'RM Dashboard',
+                 JSON.stringify(body.members || []), JSON.stringify(body.insurers || []),
+                 null, new Date().toISOString()]);
+        } catch (dbErr) {
+            console.error('DB save error (non-fatal):', dbErr.message);
+        }
+
         const pdfPath = await generatePDF(quoteData, body.advisor_name || null);
         res.setHeader('Content-Type', 'application/pdf');
         res.setHeader('Content-Disposition', `attachment; filename="${quoteId}.pdf"`);

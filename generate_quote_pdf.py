@@ -415,7 +415,9 @@ class PDFQuoteGenerator:
         self.advisor  = data.get("advisor_name", "your trusted advisor")
         self.date     = data.get("date", datetime.now().strftime("%d-%m-%Y"))
         self.qid      = data.get("quote_id", "")
-        self.company  = data.get("company_name", "increMint")
+        self.company  = data.get("company_name", "")
+        self.cust_phone = data.get("customer_phone", "")
+        self.cust_city  = data.get("customer_city", "")
         self.note     = data.get("advisor_note", "")
 
         self.included = []
@@ -434,10 +436,11 @@ class PDFQuoteGenerator:
         logo_img  = load_logo_img(logo_path, 3.5*cm, 1.0*cm) if logo_path else None
 
         left_cell  = logo_img if logo_img else Paragraph(
-            f'<font color="#00C853"><b>{self.company}</b></font>', ST['bold'])
+            f'<font color="#00C853"><b>Health Insurance Quote</b></font>', ST['bold'])
+        advisor_line = f'Prepared by {self.advisor}' if self.advisor and self.advisor != 'your trusted advisor' else 'Prepared by your advisor'
         right_cell = [
             Paragraph(f'<b>Quote ID: {self.qid}</b>', ST['right']),
-            Paragraph(f'Prepared by {self.advisor}   —   {self.date}', ST['right']),
+            Paragraph(f'{advisor_line}   —   {self.date}', ST['right']),
         ]
         hdr_t = Table(
             [[left_cell, right_cell]],
@@ -459,7 +462,7 @@ class PDFQuoteGenerator:
         elems.append(green_divider(W))
         ft = Table(
             [[
-                Paragraph(f'  {self.company}  •  Quote: {self.qid}  •  {self.date}', ST['footer']),
+                Paragraph(f'  Quote: {self.qid}  •  {self.date}', ST['footer']),
                 Paragraph('Prepared by a licensed insurance advisor. For information purposes only.  ', ST['footer_r']),
             ]],
             colWidths=[W*0.55, W*0.45]
@@ -818,9 +821,14 @@ class PDFQuoteGenerator:
         p1.append(sp(4))
 
         # Title
-        name0 = self.members[0].get('name', 'your family') if self.members else 'your family'
+        cust_name = self.data.get("customer_name", "") or (self.members[0].get('name', '') if self.members else '')
+        name0 = cust_name or 'your family'
+        details_parts = [f"Prepared for {name0}"]
+        if self.cust_phone: details_parts.append(self.cust_phone)
+        if self.cust_city:  details_parts.append(self.cust_city)
+        details_parts.append(self.date)
         p1.append(Paragraph("HEALTH INSURANCE — PLAN COMPARISON", ST['title']))
-        p1.append(Paragraph(f"Prepared for {name0}  ·  {self.date}", ST['subtitle']))
+        p1.append(Paragraph("  ·  ".join(details_parts), ST['subtitle']))
         p1.append(sp(5))
 
         # ── Members table ────────────────────────────────────────────────
@@ -912,11 +920,11 @@ class PDFQuoteGenerator:
                     pct      = (saving / (p1v * 2) * 100) if p1v > 0 else 0
                     prem_txt = fmt_prem(p2v)
                     if saving > 0:
-                        save_txt = f'<font color="#2E7D5B">Save Rs. {int(saving):,} ({pct:.0f}% off)</font>'
+                        save_txt = f'<b><font color="#1B5E20">✔ Save Rs. {int(saving):,}  ({pct:.0f}% off)</font></b>'
                         cell = [Paragraph(prem_txt, ST['prem_big']),
                                 Paragraph("for 2 years", ST['prem_yr']),
-                                Paragraph(save_txt, ParagraphStyle('_sv', fontName="Helvetica",
-                                    fontSize=7.5, leading=10, alignment=TA_CENTER))]
+                                Paragraph(save_txt, ParagraphStyle('_sv', fontName="Helvetica-Bold",
+                                    fontSize=8, leading=11, alignment=TA_CENTER))]
                     else:
                         cell = [Paragraph(prem_txt, ST['prem_big']), Paragraph("for 2 years", ST['prem_yr'])]
                 else:
@@ -927,7 +935,8 @@ class PDFQuoteGenerator:
         # Row 5 — 3-year premium + savings
         has3 = any(_safe_num(self.prem_map.get(n, {}).get("premium_3yr", 0)) > 0 for n in self.included)
         if has3:
-            yr3_row = [Paragraph("3 Year Premium", ST['med_label'])]
+            yr3_row = [Paragraph("3 Year Premium  ★ BEST VALUE", ParagraphStyle('_lbl3',
+                fontName="Helvetica-Bold", fontSize=8, leading=11, textColor=colors.HexColor("#1B5E20")))]
             for name in self.included:
                 ins_d  = self.prem_map.get(name, {})
                 p1v    = _safe_num(ins_d.get("premium_1yr", 0))
@@ -937,11 +946,11 @@ class PDFQuoteGenerator:
                     pct      = (saving / (p1v * 3) * 100) if p1v > 0 else 0
                     prem_txt = fmt_prem(p3v)
                     if saving > 0:
-                        save_txt = f'<font color="#2E7D5B">Save Rs. {int(saving):,} ({pct:.0f}% off)</font>'
+                        save_txt = f'<b><font color="#1B5E20">✔ Save Rs. {int(saving):,}  ({pct:.0f}% off)</font></b>'
                         cell = [Paragraph(prem_txt, ST['prem_big']),
                                 Paragraph("for 3 years", ST['prem_yr']),
-                                Paragraph(save_txt, ParagraphStyle('_sv3', fontName="Helvetica",
-                                    fontSize=7.5, leading=10, alignment=TA_CENTER))]
+                                Paragraph(save_txt, ParagraphStyle('_sv3', fontName="Helvetica-Bold",
+                                    fontSize=8, leading=11, alignment=TA_CENTER))]
                     else:
                         cell = [Paragraph(prem_txt, ST['prem_big']), Paragraph("for 3 years", ST['prem_yr'])]
                 else:
@@ -969,8 +978,11 @@ class PDFQuoteGenerator:
             ('BACKGROUND',    (0, 1), (-1, 1),  LGRAY),
             ('BACKGROUND',    (0, 2), (-1, 2),  WHITE),
         ]
-        if has2: prem_style.append(('BACKGROUND', (0, 3), (-1, 3), GREEN_PALE))
-        if has3: prem_style.append(('BACKGROUND', (0, 4 if has2 else 3), (-1, 4 if has2 else 3), GREEN_PALE))
+        if has2: prem_style.append(('BACKGROUND', (0, 3), (-1, 3), GREEN_LIGHT))
+        if has3:
+            r3 = 4 if has2 else 3
+            prem_style.append(('BACKGROUND', (0, r3), (-1, r3), colors.HexColor("#C8F5DE")))
+            prem_style.append(('BOX', (0, r3), (-1, r3), 1.5, colors.HexColor("#00A846")))
         prem_t.setStyle(TableStyle(prem_style))
         p1.append(prem_t)
 
