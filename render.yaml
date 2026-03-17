@@ -2,7 +2,10 @@ services:
   - type: web
     name: health-quote
     env: node
-    buildCommand: npm install
+    buildCommand: npm install && npx puppeteer browsers install chrome
     startCommand: node server.js
     plan: free
     autoDeploy: true
+    envVars:
+      - key: PUPPETEER_CACHE_DIR
+        value: /opt/render/cache/puppeteer
