@@ -470,14 +470,14 @@ app.post('/generate', async (req, res) => {
                 (quote_id, customer_name, customer_phone, customer_email, advisor_id, advisor_name, submitted_by, members_json, insurers_json, advisor_note, submitted_at)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
                 [quoteId, body.customer_name || 'Unknown', body.customer_phone || null,
-                 null, null, body.advisor_name || 'RM Dashboard', 'RM Dashboard',
+                 null, null, body.advisor_name || body.agent_name || 'RM Dashboard', 'RM Dashboard',
                  JSON.stringify(body.members || []), JSON.stringify(body.insurers || []),
                  null, new Date().toISOString()]);
         } catch (dbErr) {
             console.error('DB save error (non-fatal):', dbErr.message);
         }
 
-        const pdfPath = await generatePDF(quoteData, body.advisor_name || null);
+        const pdfPath = await generatePDF(quoteData, body.advisor_name || body.agent_name || null);
         res.setHeader('Content-Type', 'application/pdf');
         res.setHeader('Content-Disposition', `attachment; filename="${quoteId}.pdf"`);
         fs.createReadStream(pdfPath).pipe(res);
