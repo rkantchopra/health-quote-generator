@@ -123,8 +123,10 @@ app.get('/api/config', (req, res) => {
     }
 });
 
+app.get('/ping', (req, res) => res.json({ status: 'alive', ts: Date.now() }));
+
 app.post('/api/save-config', (req, res) => {
-    if (!req.session.isAuthenticated) return res.status(403).json({ error: "Unauthorized" });
+    if (!req.session.isAuthenticated && !req.session.isAdmin) return res.status(403).json({ error: "Unauthorized" });
     const configPath = path.join(__dirname, 'config', 'config.json');
     try {
         fs.writeFileSync(configPath, JSON.stringify(req.body, null, 2));

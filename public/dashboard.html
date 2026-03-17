@@ -442,6 +442,7 @@
             <th>Quote Reference</th>
             <th>Customer Information</th>
             <th>Submission Date</th>
+            <th>Agent</th>
             <th>Lead Status</th>
             <th style="text-align: right;">Operations</th>
           </tr>
@@ -556,6 +557,14 @@
     let currentEditQuote = null;
     let configInsurers = [];
 
+    function lakhsToNumber(s) {
+      if (!s) return null;
+      const m = String(s).match(/^(\d+(?:\.\d+)?)L$/i);
+      if (m) return Math.round(parseFloat(m[1]) * 100000);
+      const n = Number(s);
+      return isNaN(n) ? null : n;
+    }
+
     async function dashLogin() {
       const pw = document.getElementById('dashPw').value;
       const res = await fetch('/api/dashboard-login', {
@@ -618,6 +627,7 @@
               <div style="font-size: 12px; color: var(--text-muted);">${l.customer_phone || ''}</div>
             </td>
             <td><div style="font-size: 13px;">${new Date(l.submitted_at).toLocaleDateString(undefined, {dateStyle: 'medium'})}</div></td>
+            <td><div style="font-size: 13px; color: var(--primary-green); font-weight: 600;">${l.advisor_name || '—'}</div></td>
             <td><span class="badge ${badgeClass}">${status}</span></td>
             <td style="text-align: right;">
               <div style="display: flex; gap: 4px; justify-content: flex-end;">
@@ -772,11 +782,20 @@
         }
       });
 
+      // If all selected insurers have the same SA, sync it to members too
+      let updatedMembers = currentEditQuote.members || [];
+      const saValues = insurers.filter(i => i.sum_assured).map(i => i.sum_assured);
+      const uniqueSAs = [...new Set(saValues)];
+      if (uniqueSAs.length === 1) {
+        const newSA = lakhsToNumber(uniqueSAs[0]);
+        if (newSA) updatedMembers = updatedMembers.map(m => ({ ...m, sum_assured: newSA }));
+      }
+
       const payload = {
         customer_name: currentEditQuote.customer_name,
         customer_phone: currentEditQuote.customer_phone,
         customer_email: currentEditQuote.customer_email,
-        members: currentEditQuote.members || [],
+        members: updatedMembers,
         insurers,
         advisor_note: document.getElementById('edit-advisor-note').value
       };
@@ -815,8 +834,8 @@
     }
 
     function exportCSV() {
-      const headers = ["ID", "Name", "Phone", "Date", "Status"];
-      const rows = rawLeads.map(l => [l.quote_id, l.customer_name, l.customer_phone, l.submitted_at, l.status]);
+      const headers = ["ID", "Name", "Phone", "Date", "Agent", "Status"];
+      const rows = rawLeads.map(l => [l.quote_id, l.customer_name, l.customer_phone, l.submitted_at, l.advisor_name || '—', l.status]);
       let content = "data:text/csv;charset=utf-8," + headers.join(",") + "\n" + rows.map(r => r.join(",")).join("\n");
       const encodedUri = encodeURI(content);
       const link = document.createElement("a");
