@@ -1,41 +1,53 @@
-const { execFile } = require('child_process');
-const path = require('path');
-const fs   = require('fs');
+'use strict';
+const puppeteer           = require('puppeteer');
+const { buildQuoteHTML }  = require('./templates/quoteHTML');
+const path                = require('path');
+const fs                  = require('fs');
 
 /**
- * Generates a PDF quote file.
+ * Generates a PDF quote using Puppeteer (headless Chrome → pixel-perfect HTML→PDF).
  * Returns the path to the generated .pdf file.
  */
 function generatePDF(quoteData, advisorName) {
-    return new Promise((resolve, reject) => {
-        const quotesDir = path.join(__dirname, 'quotes');
-        if (!fs.existsSync(quotesDir)) fs.mkdirSync(quotesDir, { recursive: true });
+  return new Promise(async (resolve, reject) => {
+    const quotesDir = path.join(__dirname, 'quotes');
+    if (!fs.existsSync(quotesDir)) fs.mkdirSync(quotesDir, { recursive: true });
 
-        const quoteId    = quoteData.quote_id || 'UNKNOWN';
-        const outputPath = path.join(quotesDir, `${quoteId}.pdf`);
-        const logoFolder = path.join(__dirname, 'logos');
-        const scriptPath = path.join(__dirname, 'generate_quote_pdf.py');
+    const quoteId    = quoteData.quote_id || 'UNKNOWN';
+    const outputPath = path.join(quotesDir, `${quoteId}.pdf`);
+    const data       = { ...quoteData, advisor_name: advisorName || 'your trusted advisor' };
 
-        // Add advisor name into data
-        const data = { ...quoteData, advisor_name: advisorName || 'your trusted advisor' };
-        const jsonArg = JSON.stringify(data);
+    let browser;
+    try {
+      const html = buildQuoteHTML(data);
 
-        // Try python3 first, fall back to python
-        const tryPython = (cmd) => new Promise((res, rej) => {
-            execFile(cmd, [scriptPath, jsonArg, outputPath, logoFolder], 
-                { maxBuffer: 10 * 1024 * 1024 },
-                (err, stdout, stderr) => {
-                    if (err) return rej(err);
-                    res(stdout.trim() || outputPath);
-                }
-            );
-        });
+      browser = await puppeteer.launch({
+        headless: 'new',
+        args: [
+          '--no-sandbox',
+          '--disable-setuid-sandbox',
+          '--disable-dev-shm-usage',
+          '--disable-gpu',
+        ],
+      });
 
-        tryPython('python3')
-            .catch(() => tryPython('python'))
-            .then(outPath => resolve(outPath || outputPath))
-            .catch(err => reject(new Error(`Python script failed: ${err.message}`)));
-    });
+      const page = await browser.newPage();
+      await page.setContent(html, { waitUntil: 'domcontentloaded' });
+      await page.pdf({
+        path: outputPath,
+        format: 'A4',
+        landscape: true,
+        margin: { top: '0.7cm', bottom: '0.7cm', left: '0.7cm', right: '0.7cm' },
+        printBackground: true,
+      });
+
+      resolve(outputPath);
+    } catch (err) {
+      reject(new Error(`PDF generation failed: ${err.message}`));
+    } finally {
+      if (browser) await browser.close();
+    }
+  });
 }
 
 module.exports = generatePDF;

@@ -135,8 +135,9 @@ app.post('/api/save-config', (req, res) => {
 });
 
 app.get('/api/quotes', async (req, res) => {
-    console.log('Session diagnostics:', req.session);
-    if (!req.session.isAdmin && !req.session.isAuthenticated) {
+    const apiKey = req.headers['x-rm-key'];
+    const validKey = process.env.RM_API_KEY || 'incremint-rm-2026';
+    if (!req.session.isAdmin && !req.session.isAuthenticated && apiKey !== validKey) {
         return res.status(401).json({ error: "Unauthorized" });
     }
     try {
@@ -180,15 +181,26 @@ app.get('/api/quotes/:id/pdf', async (req, res) => {
     try {
         const id = req.params.id;
         const pdfPath = path.join(__dirname, 'quotes', `${id}.pdf`);
-        if (fs.existsSync(pdfPath)) {
-            res.setHeader('Content-Type', 'application/pdf');
-            res.setHeader('Content-Disposition', `attachment; filename="${id}.pdf"`);
-            res.sendFile(pdfPath);
-        } else {
-            res.status(404).send('Quote file not found');
-        }
+        // Always regenerate from DB — never serve stale cached file
+        const quote = await get('SELECT * FROM quotes WHERE quote_id = ?', [id]);
+        if (!quote) return res.status(404).send('Quote not found');
+        const dateObj = new Date(quote.submitted_at);
+        const dd = String(dateObj.getDate()).padStart(2, '0');
+        const mm = String(dateObj.getMonth() + 1).padStart(2, '0');
+        const yyyy = dateObj.getFullYear();
+        const quoteData = {
+            quote_id: quote.quote_id, date: `${dd}-${mm}-${yyyy}`,
+            customer_name: quote.customer_name, customer_phone: quote.customer_phone,
+            advisor_note: quote.advisor_note,
+            members: JSON.parse(quote.members_json || '[]'),
+            insurers: JSON.parse(quote.insurers_json || '[]'),
+        };
+        await generatePDF(quoteData, quote.advisor_name);
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename="${id}.pdf"`);
+        res.sendFile(pdfPath);
     } catch (err) {
-        res.status(500).send('Failed to fetch quote file');
+        res.status(500).send('Failed to fetch quote file: ' + err.message);
     }
 });
 
