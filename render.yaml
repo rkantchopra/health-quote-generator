@@ -8,4 +8,4 @@ services:
     autoDeploy: true
     envVars:
       - key: PUPPETEER_CACHE_DIR
-        value: /opt/render/cache/puppeteer
+        value: /opt/render/project/src/.cache/puppeteer
