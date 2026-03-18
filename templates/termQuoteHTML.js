@@ -141,11 +141,11 @@ function buildPremiumTable(data) {
   const cheapestA_total  = validA.length > 0 ? Math.min(...validA.map(c => c.compA.total)) : 0;
   const cheapestB_total  = validB.length > 0 ? Math.min(...validB.map(c => c.compB.total)) : 0;
 
-  // Column headers
+  // Column headers — logo + company merged into one column
   let cols;
   if (isSalaried) {
     cols = [
-      '', 'Company',
+      'Company',
       `${labelA}<br>1st Yr`, `${labelA}<br>2nd Yr+`,
       `${labelB}<br>1st Yr`, `${labelB}<br>2nd Yr+`,
       `Total ${labelA}<br>(${yrsA} yrs)`, `Total ${labelB}<br>(${yrsB} yrs)`,
@@ -153,7 +153,7 @@ function buildPremiumTable(data) {
     ];
   } else {
     cols = [
-      '', 'Company', `${labelA}<br>(Annual)`, `${labelB}<br>(Annual)`,
+      'Company', `${labelA}<br>(Annual)`, `${labelB}<br>(Annual)`,
       `Total ${labelA}<br>(${yrsA} yrs)`, `Total ${labelB}<br>(${yrsB} yrs)`,
       `Savings with<br>${labelB}`, '%'
     ];
@@ -162,10 +162,11 @@ function buildPremiumTable(data) {
   let headerHTML = cols.map((c, i) => {
     let w;
     if (isSalaried) {
-      // 10 cols: logo(8%) + company(14%) + 8 data cols(9.75% each = 78%) = 100%
-      w = i === 0 ? '8%' : i === 1 ? '14%' : '9.75%';
+      // 9 cols: company(20%) + 8 data cols(10% each = 80%) = 100%
+      w = i === 0 ? '20%' : '10%';
     } else {
-      w = i === 0 ? '8%' : i === 1 ? '18%' : '10.5%';
+      // 7 cols: company(22%) + 6 data cols(13% each = 78%) = 100%
+      w = i === 0 ? '22%' : '13%';
     }
     return `<th style="background:${BRAND_GREEN};color:white;font-size:10px;font-weight:700;padding:10px 4px;border:1px solid rgba(255,255,255,0.3);text-align:center;width:${w};vertical-align:middle">${c}</th>`;
   }).join('');
@@ -187,9 +188,20 @@ function buildPremiumTable(data) {
 
     const bg = idx % 2 === 0 ? '#f8fef8' : 'white';
 
-    const logoCell = logoB64
-      ? `<img src="${logoB64}" style="height:32px;max-width:60px;object-fit:contain;display:block;margin:0 auto" />`
-      : `<div style="width:36px;height:36px;border-radius:50%;background:${INSURER_COLORS[idx % INSURER_COLORS.length]};display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:15px;margin:0 auto">${esc(brand.charAt(0))}</div>`;
+    const logoImg = logoB64
+      ? `<img src="${logoB64}" style="height:28px;max-width:55px;object-fit:contain;flex-shrink:0" />`
+      : `<div style="width:28px;height:28px;border-radius:50%;background:${INSURER_COLORS[idx % INSURER_COLORS.length]};display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:12px;flex-shrink:0">${esc(brand.charAt(0))}</div>`;
+
+    // Merged logo + name cell
+    const companyCell = `<td style="padding:6px 8px;border:1px solid #e0e0e0;text-align:left;background:${bg}">
+      <div style="display:flex;align-items:center;gap:6px">
+        ${logoImg}
+        <div style="min-width:0">
+          <div style="font-weight:700;font-size:11px;color:#1a1a1a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(brand)}</div>
+          ${sub ? `<div style="font-size:9px;color:#888;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(sub)}</div>` : ''}
+        </div>
+      </div>
+    </td>`;
 
     // Highlight cheapest annual premium cells
     const isChpA = compA.yr2 > 0 && compA.yr2 === cheapestA_annual;
@@ -223,8 +235,7 @@ function buildPremiumTable(data) {
 
     if (isSalaried) {
       rowsHTML += `<tr style="background:${bg}">
-        <td style="padding:6px;border:1px solid #e0e0e0;text-align:center">${logoCell}</td>
-        <td style="padding:8px 6px;border:1px solid #e0e0e0;text-align:left;font-size:11px"><b>${esc(brand)}</b>${sub ? `<br><span style="color:#888;font-size:10px">${esc(sub)}</span>` : ''}</td>
+        ${companyCell}
         ${premCell(compA.yr1, false)}
         ${premCell(compA.yr2, isChpA)}
         ${premCell(compB.yr1, false)}
@@ -236,8 +247,7 @@ function buildPremiumTable(data) {
       </tr>`;
     } else {
       rowsHTML += `<tr style="background:${bg}">
-        <td style="padding:6px;border:1px solid #e0e0e0;text-align:center">${logoCell}</td>
-        <td style="padding:8px 8px;border:1px solid #e0e0e0;text-align:left;font-size:11px"><b>${esc(brand)}</b>${sub ? `<br><span style="color:#888;font-size:10px">${esc(sub)}</span>` : ''}</td>
+        ${companyCell}
         ${premCell(compA.annual, isChpA)}
         ${premCell(compB.annual, isChpB)}
         ${totalCell(totA, isChpTotA)}
