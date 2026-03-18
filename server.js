@@ -3,7 +3,7 @@ const express = require('express');
 const session = require('express-session');
 const cors = require('cors');
 const path = require('path');
-const { db, run, get, all } = require('./database');
+const { db, run, get, all, syncConfig } = require('./database');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -130,6 +130,7 @@ app.post('/api/save-config', (req, res) => {
     const configPath = path.join(__dirname, 'config', 'config.json');
     try {
         fs.writeFileSync(configPath, JSON.stringify(req.body, null, 2));
+        syncConfig('health', req.body);
         res.json({ success: true });
     } catch (err) {
         res.status(500).json({ success: false, message: "Failed to save configuration" });
@@ -509,6 +510,7 @@ app.post('/api/save-term-config', (req, res) => {
     try {
         const configPath = path.join(__dirname, 'config', 'term-config.json');
         fs.writeFileSync(configPath, JSON.stringify(req.body, null, 2));
+        syncConfig('term', req.body);
         res.json({ success: true });
     } catch (err) {
         console.error('Save term config error:', err);

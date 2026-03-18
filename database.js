@@ -76,6 +76,11 @@ db.exec(`CREATE TABLE IF NOT EXISTS quotes (
       console.log(`✅ Restored ${count} quotes from Firebase`);
     }
 
+    // Restore configs (health + term)
+    const configDir = path.join(__dirname, 'config');
+    await restoreConfig('health', path.join(configDir, 'config.json'));
+    await restoreConfig('term', path.join(configDir, 'term-config.json'));
+
     // Restore advisors
     const aSnap = await fbDb.ref('health_quotes/advisors').once('value');
     const advisors = aSnap.val();
@@ -112,6 +117,31 @@ function syncQuote(quoteId) {
   } catch (e) { /* ignore */ }
 }
 
+function syncConfig(configKey, data) {
+  if (!fbDb || !configKey || !data) return;
+  fbDb.ref(`health_quotes/configs/${configKey}`).set(data)
+    .catch(e => console.error(`FB config sync error (${configKey}):`, e.message));
+}
+
+async function restoreConfig(configKey, filePath) {
+  if (!fbDb) return false;
+  try {
+    const snap = await fbDb.ref(`health_quotes/configs/${configKey}`).once('value');
+    const data = snap.val();
+    if (data) {
+      const fs = require('fs');
+      const dir = require('path').dirname(filePath);
+      if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+      fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
+      console.log(`✅ Restored ${configKey} config from Firebase`);
+      return true;
+    }
+  } catch (e) {
+    console.error(`⚠️ Firebase config restore failed (${configKey}):`, e.message);
+  }
+  return false;
+}
+
 function syncAdvisor(id) {
   if (!fbDb || !id) return;
   try {
@@ -135,7 +165,7 @@ const run = (sql, params = []) => {
     // Auto-sync mutations to Firebase (background, non-blocking)
     const s = sql.toLowerCase().trim();
     if (s.includes('quotes') && !s.startsWith('select')) {
-      const quoteId = params.find(p => typeof p === 'string' && /^TK\d{8,}/.test(p));
+      const quoteId = params.find(p => typeof p === 'string' && /^T[KM]\d{8,}/.test(p));
       if (quoteId) syncQuote(quoteId);
     }
     if (s.includes('advisors') && !s.startsWith('select')) {
@@ -167,4 +197,4 @@ const all = (sql, params = []) => {
   }
 };
 
-module.exports = { db, run, get, all };
+module.exports = { db, run, get, all, syncConfig };
