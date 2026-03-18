@@ -1,0 +1,114 @@
+{
+  "insurers": [
+    { "id": 1, "name": "ICICI Prudential – iProtect Smart", "active": true },
+    { "id": 2, "name": "HDFC Life – Click 2 Protect Life", "active": true },
+    { "id": 3, "name": "Tata AIA – Sampoorna Raksha Supreme", "active": true },
+    { "id": 4, "name": "Bajaj Allianz – eTouch", "active": true },
+    { "id": 5, "name": "Max Life – Smart Secure Plus", "active": true }
+  ],
+  "payment_options": ["Regular", "5 Pay", "10 Pay", "15 Pay", "Pay Till 60"],
+  "features": [
+    {
+      "id": 1, "name": "Terminal Illness Payout", "visible": true,
+      "values": {
+        "ICICI Prudential – iProtect Smart": "100% payout on terminal illness",
+        "HDFC Life – Click 2 Protect Life": "Early payout on terminal illness (up to 2 Cr)",
+        "Tata AIA – Sampoorna Raksha Supreme": "Early payout on terminal illness",
+        "Bajaj Allianz – eTouch": "Early payout on terminal illness (up to 2 Cr)",
+        "Max Life – Smart Secure Plus": "Early payout on terminal illness (up to 1 Cr)"
+      }
+    },
+    {
+      "id": 2, "name": "Waiver of Premium", "visible": true,
+      "values": {
+        "ICICI Prudential – iProtect Smart": "Not Available",
+        "HDFC Life – Click 2 Protect Life": "Not Available",
+        "Tata AIA – Sampoorna Raksha Supreme": "On disability / terminal illness",
+        "Bajaj Allianz – eTouch": "On disability / terminal illness",
+        "Max Life – Smart Secure Plus": "On terminal illness"
+      }
+    },
+    {
+      "id": 3, "name": "Premium Delay Option", "visible": true,
+      "values": {
+        "ICICI Prudential – iProtect Smart": "Up to 12 months",
+        "HDFC Life – Click 2 Protect Life": "Not Available",
+        "Tata AIA – Sampoorna Raksha Supreme": "Not Available",
+        "Bajaj Allianz – eTouch": "Up to 12 months",
+        "Max Life – Smart Secure Plus": "Up to 12 months"
+      }
+    },
+    {
+      "id": 4, "name": "Immediate Payout", "visible": true,
+      "values": {
+        "ICICI Prudential – iProtect Smart": "₹3 Lacs",
+        "HDFC Life – Click 2 Protect Life": "Not Available",
+        "Tata AIA – Sampoorna Raksha Supreme": "Not Available",
+        "Bajaj Allianz – eTouch": "₹2 Lacs",
+        "Max Life – Smart Secure Plus": "₹2 Lacs"
+      }
+    },
+    {
+      "id": 5, "name": "Return of Premium", "visible": true,
+      "values": {
+        "ICICI Prudential – iProtect Smart": "Age 61–80 yrs",
+        "HDFC Life – Click 2 Protect Life": "Age 61–70 yrs",
+        "Tata AIA – Sampoorna Raksha Supreme": "Optional rider",
+        "Bajaj Allianz – eTouch": "Age 60–64 yrs",
+        "Max Life – Smart Secure Plus": "Age 64–81 yrs"
+      }
+    },
+    {
+      "id": 6, "name": "Accidental Death Benefit", "visible": true,
+      "values": {
+        "ICICI Prudential – iProtect Smart": "Optional Rider",
+        "HDFC Life – Click 2 Protect Life": "Optional Rider",
+        "Tata AIA – Sampoorna Raksha Supreme": "Optional Rider",
+        "Bajaj Allianz – eTouch": "Optional Rider",
+        "Max Life – Smart Secure Plus": "Optional Rider"
+      }
+    },
+    {
+      "id": 7, "name": "Critical Illness Cover", "visible": true,
+      "values": {
+        "ICICI Prudential – iProtect Smart": "Optional Rider (up to 36 CI)",
+        "HDFC Life – Click 2 Protect Life": "Optional Rider",
+        "Tata AIA – Sampoorna Raksha Supreme": "Optional Rider",
+        "Bajaj Allianz – eTouch": "Optional Rider",
+        "Max Life – Smart Secure Plus": "Optional Rider"
+      }
+    }
+  ],
+  "recommendations": {
+    "ICICI Prudential – iProtect Smart": [
+      "100% terminal illness payout",
+      "₹3 Lacs immediate payout",
+      "12-month premium delay option",
+      "Return of premium (age 61–80)"
+    ],
+    "HDFC Life – Click 2 Protect Life": [
+      "Early payout up to 2 Cr on terminal illness",
+      "Return of premium (age 61–70)",
+      "Strong claim settlement ratio"
+    ],
+    "Tata AIA – Sampoorna Raksha Supreme": [
+      "Waiver of premium on disability",
+      "Return of premium option",
+      "Comprehensive riders available"
+    ],
+    "Bajaj Allianz – eTouch": [
+      "12-month premium delay option",
+      "₹2 Lacs immediate payout",
+      "Waiver of premium on disability",
+      "Return of premium (age 60–64)"
+    ],
+    "Max Life – Smart Secure Plus": [
+      "₹2 Lacs immediate payout",
+      "12-month premium delay option",
+      "Waiver on terminal illness",
+      "Return of premium (age 64–81)"
+    ]
+  },
+  "advisor_note": "Term insurance premiums vary with age, health, and lifestyle. Compare limited-pay options to reduce total premium outgo. Limited-pay finishes premiums early while cover continues till the full policy term.",
+  "sum_assured_options": ["50L", "75L", "1 Cr", "1.5 Cr", "2 Cr", "3 Cr", "5 Cr"]
+}

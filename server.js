@@ -487,6 +487,77 @@ app.post('/generate', async (req, res) => {
     }
 });
 
+// ── TERM QUOTE ROUTES ────────────────────────────────────────────────────────
+
+// Term config
+app.get('/api/term-config', (req, res) => {
+    try {
+        const configPath = path.join(__dirname, 'config', 'term-config.json');
+        const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+        res.json(config);
+    } catch (err) {
+        console.error('Term config error:', err);
+        res.status(500).json({ error: 'Failed to load term config' });
+    }
+});
+
+// Save term config (admin)
+app.post('/api/save-term-config', (req, res) => {
+    if (!req.session.isAuthenticated && !req.session.isAdmin) {
+        return res.status(403).json({ success: false, message: 'Not authorized' });
+    }
+    try {
+        const configPath = path.join(__dirname, 'config', 'term-config.json');
+        fs.writeFileSync(configPath, JSON.stringify(req.body, null, 2));
+        res.json({ success: true });
+    } catch (err) {
+        console.error('Save term config error:', err);
+        res.status(500).json({ success: false, message: 'Failed to save' });
+    }
+});
+
+// Generate term quote → returns HTML URL (opens in new tab, user prints to PDF)
+app.post('/generate-term', async (req, res) => {
+    try {
+        const body = req.body;
+        const dateObj = new Date();
+        const yyyy = dateObj.getFullYear();
+        const mm = String(dateObj.getMonth() + 1).padStart(2, '0');
+        const dd = String(dateObj.getDate()).padStart(2, '0');
+        const quoteId = `TM${yyyy}${mm}${dd}${Math.floor(1000 + Math.random() * 9000)}`;
+        const quoteData = { ...body, quote_id: quoteId, date: `${dd}-${mm}-${yyyy}` };
+
+        // Save to DB
+        try {
+            await run(`INSERT INTO quotes
+                (quote_id, customer_name, customer_phone, customer_email, advisor_id, advisor_name, submitted_by, members_json, insurers_json, advisor_note, submitted_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                [quoteId, body.customer_name || 'Unknown', body.customer_phone || null,
+                 null, null, body.advisor_name || body.agent_name || 'RM Dashboard', 'RM Dashboard',
+                 JSON.stringify([{ name: body.customer_name, age: body.age, dob: body.dob, city: body.city, sum_assured: body.sum_assured }]),
+                 JSON.stringify(body.insurers || []),
+                 body.advisor_note || null, new Date().toISOString()]);
+        } catch (dbErr) {
+            console.error('Term DB save error (non-fatal):', dbErr.message);
+        }
+
+        // Save HTML to file for viewing in browser
+        const { buildTermQuoteHTML } = require('./templates/termQuoteHTML');
+        const html = buildTermQuoteHTML(quoteData);
+        const htmlDir = path.join(__dirname, 'quotes');
+        if (!fs.existsSync(htmlDir)) fs.mkdirSync(htmlDir, { recursive: true });
+        fs.writeFileSync(path.join(htmlDir, `${quoteId}.html`), html);
+
+        res.json({ success: true, quoteId, url: `/quotes/${quoteId}.html` });
+    } catch (err) {
+        console.error('Term generate error:', err);
+        res.status(500).json({ success: false, message: 'Failed to generate term quote: ' + err.message });
+    }
+});
+
+// Serve generated quote HTML files
+app.use('/quotes', express.static(path.join(__dirname, 'quotes')));
+
 app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
 });
