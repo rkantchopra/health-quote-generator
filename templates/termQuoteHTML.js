@@ -14,12 +14,14 @@ const LOGO_DIR   = path.join(__dirname, '../logos');
 const PUBLIC_DIR = path.join(__dirname, '../public');
 
 const TERM_LOGO_MAP = {
-  icici:  'icici_pru.jpg',
-  hdfc:   'hdfc_life.jpg',
-  tata:   'tata_aia.jpg',
-  bajaj:  'bajaj_allianz.jpg',
-  max:    'max_life.jpg',
-  axis:   'max_life.jpg',
+  icici:  'ICICIPru_logo.webp',
+  hdfc:   'HDFC_Life_logo.avif',
+  tata:   'TATA_AIA_logo.png',
+  bajaj:  'BAJAJ_logo.avif',
+  max:    'MAX_logo.avif',
+  axis:   'MAX_logo.avif',
+  birla:  'Birla_Sun_Life_logo.avif',
+  kotak:  'kotak_logo.avif',
 };
 
 function getTermLogoB64(name) {
@@ -31,10 +33,14 @@ function getTermLogoB64(name) {
   else if (n.includes('tata'))           key = 'tata';
   else if (n.includes('bajaj'))          key = 'bajaj';
   else if (n.includes('max') || n.includes('axis')) key = 'max';
+  else if (n.includes('birla') || n.includes('aditya')) key = 'birla';
+  else if (n.includes('kotak'))          key = 'kotak';
   if (!key || !TERM_LOGO_MAP[key]) return null;
   const file = path.join(LOGO_DIR, TERM_LOGO_MAP[key]);
   if (!fs.existsSync(file)) return null;
-  return 'data:image/jpeg;base64,' + fs.readFileSync(file).toString('base64');
+  const ext = path.extname(file).toLowerCase();
+  const mime = ext === '.png' ? 'image/png' : ext === '.webp' ? 'image/webp' : ext === '.avif' ? 'image/avif' : 'image/jpeg';
+  return `data:${mime};base64,` + fs.readFileSync(file).toString('base64');
 }
 
 function getIncremintLogoB64() {
