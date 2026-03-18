@@ -14,12 +14,12 @@ const HIGHLIGHT_GREEN = '#C8F7C8';
 const LOGO_DIR   = path.join(__dirname, '../logos');
 
 const TERM_LOGO_MAP = {
-  icici:  'ICICIPru_logo.webp',
-  hdfc:   'HDFC_Life_logo.avif',
-  tata:   'TATA_AIA_logo.png',
+  icici:  'New_ICICIPru_logo.webp',
+  hdfc:   'New_HDFC_Life_logo.avif',
+  tata:   'New_TATA_AIA_logo.png',
   bajaj:  'BAJAJ_logo.avif',
-  max:    'MAX_logo.avif',
-  axis:   'MAX_logo.avif',
+  max:    'New_MAX_logo.avif',
+  axis:   'New_MAX_logo.avif',
   birla:  'Birla_Sun_Life_logo.avif',
   kotak:  'kotak_logo.avif',
 };
