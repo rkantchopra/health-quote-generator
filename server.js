@@ -560,4 +560,11 @@ app.use('/quotes', express.static(path.join(__dirname, 'quotes')));
 
 app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
+
+    // ── Keep-alive: self-ping every 13 minutes so Render free tier doesn't sleep ──
+    const RENDER_URL = process.env.RENDER_EXTERNAL_URL || `http://localhost:${PORT}`;
+    setInterval(() => {
+        fetch(`${RENDER_URL}/ping`).catch(() => {});
+        console.log(`[keep-alive] pinged ${RENDER_URL}/ping`);
+    }, 13 * 60 * 1000); // 13 minutes
 });
