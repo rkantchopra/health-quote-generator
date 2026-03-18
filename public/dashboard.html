@@ -440,6 +440,7 @@
         <thead>
           <tr>
             <th>Quote Reference</th>
+            <th>Product</th>
             <th>Customer Information</th>
             <th>Submission Date</th>
             <th>Agent</th>
@@ -622,6 +623,10 @@
         return `
           <tr id="row-${l.quote_id}">
             <td><span style="font-weight: 700; color: var(--primary-green);">${l.quote_id}</span></td>
+            <td>${l.quote_id.startsWith('TM')
+              ? '<span style="display:inline-flex;align-items:center;gap:4px;padding:5px 10px;border-radius:6px;font-size:11px;font-weight:700;background:#EDE9FE;color:#7C3AED;border:1px solid #DDD6FE">🛡 Term Life</span>'
+              : '<span style="display:inline-flex;align-items:center;gap:4px;padding:5px 10px;border-radius:6px;font-size:11px;font-weight:700;background:#ECFDF5;color:#059669;border:1px solid #A7F3D0">🏥 Health</span>'
+            }</td>
             <td>
               <div style="font-weight: 700;">${l.customer_name || 'Anonymous'}</div>
               <div style="font-size: 12px; color: var(--text-muted);">${l.customer_phone || ''}</div>
@@ -634,7 +639,7 @@
                 <button class="action-icon-btn" title="View Quote" onclick="editLead('${l.quote_id}')">
                   <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                 </button>
-                <button class="action-icon-btn" title="Download PDF" onclick="downloadPDF('${l.quote_id}')">
+                <button class="action-icon-btn" title="${l.quote_id.startsWith('TM') ? 'Open Quote' : 'Download PDF'}" onclick="${l.quote_id.startsWith('TM') ? `window.open('/quotes/${l.quote_id}.html','_blank')` : `downloadPDF('${l.quote_id}')`}">
                   <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4m4-5l5 5 5-5m-5 5V3"/></svg>
                 </button>
                 <button class="action-icon-btn" title="Edit Quote (Add Insurers & Premiums)" onclick="openEditModal('${l.quote_id}')">
@@ -834,8 +839,8 @@
     }
 
     function exportCSV() {
-      const headers = ["ID", "Name", "Phone", "Date", "Agent", "Status"];
-      const rows = rawLeads.map(l => [l.quote_id, l.customer_name, l.customer_phone, l.submitted_at, l.advisor_name || '—', l.status]);
+      const headers = ["ID", "Product", "Name", "Phone", "Date", "Agent", "Status"];
+      const rows = rawLeads.map(l => [l.quote_id, l.quote_id.startsWith('TM') ? 'Term Life' : 'Health', l.customer_name, l.customer_phone, l.submitted_at, l.advisor_name || '—', l.status]);
       let content = "data:text/csv;charset=utf-8," + headers.join(",") + "\n" + rows.map(r => r.join(",")).join("\n");
       const encodedUri = encodeURI(content);
       const link = document.createElement("a");
