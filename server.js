@@ -29,7 +29,7 @@ app.use(session({
 const fs = require('fs');
 const bcrypt = require('bcryptjs');
 const nodemailer = require('nodemailer');
-const generatePDF = require('./generatePDF');
+const { buildQuoteHTML } = require('./templates/quoteHTML');
 
 const transporter = nodemailer.createTransport({
     service: 'gmail',
@@ -179,11 +179,10 @@ app.delete('/api/quotes/:id', async (req, res) => {
     }
 });
 
-app.get('/api/quotes/:id/pdf', async (req, res) => {
+app.get('/api/quotes/:id/html', async (req, res) => {
     if (!req.session.isAuthenticated && !req.session.isAdmin) return res.status(401).json({ error: "Unauthorized" });
     try {
         const id = req.params.id;
-        const pdfPath = path.join(__dirname, 'quotes', `${id}.pdf`);
         // Always regenerate from DB — never serve stale cached file
         const quote = await get('SELECT * FROM quotes WHERE quote_id = ?', [id]);
         if (!quote) return res.status(404).send('Quote not found');
@@ -198,12 +197,12 @@ app.get('/api/quotes/:id/pdf', async (req, res) => {
             members: JSON.parse(quote.members_json || '[]'),
             insurers: JSON.parse(quote.insurers_json || '[]'),
         };
-        await generatePDF(quoteData, quote.advisor_name);
-        res.setHeader('Content-Type', 'application/pdf');
-        res.setHeader('Content-Disposition', `attachment; filename="${id}.pdf"`);
-        res.sendFile(pdfPath);
+        const html = buildQuoteHTML(quoteData);
+        const htmlPath = path.join(__dirname, 'quotes', `${id}.html`);
+        fs.writeFileSync(htmlPath, html);
+        res.redirect(`/quotes/${id}.html`);
     } catch (err) {
-        res.status(500).send('Failed to fetch quote file: ' + err.message);
+        res.status(500).send('Failed to fetch quote: ' + err.message);
     }
 });
 
@@ -298,14 +297,17 @@ app.patch('/api/quotes/:id', async (req, res) => {
         const mm = String(dateObj.getMonth() + 1).padStart(2, '0');
         const yyyy = dateObj.getFullYear();
 
-        // Respond immediately after DB save — PDF generation runs in background
-        res.json({ success: true });
-
-        // Regenerate PDF in background (non-blocking)
+        // Regenerate HTML file
         const quoteData = { ...body, quote_id: quoteId, date: `${dd}-${mm}-${yyyy}` };
-        generatePDF(quoteData, existing.advisor_name)
-            .then(() => console.log(`[PDF] Regenerated for ${quoteId}`))
-            .catch(err => console.error(`[PDF] Failed for ${quoteId}:`, err.message));
+        try {
+            const html = buildQuoteHTML(quoteData);
+            fs.writeFileSync(path.join(__dirname, 'quotes', `${quoteId}.html`), html);
+            console.log(`[HTML] Regenerated for ${quoteId}`);
+        } catch (htmlErr) {
+            console.error(`[HTML] Failed for ${quoteId}:`, htmlErr.message);
+        }
+
+        res.json({ success: true });
     } catch (err) {
         console.error('Edit quote error:', err);
         res.status(500).json({ success: false, message: "Failed to update quote" });
@@ -417,13 +419,14 @@ app.post('/api/submit-quote', async (req, res) => {
              body.advisor_note || null, new Date().toISOString()]);
 
         const quoteData = { ...body, quote_id: quoteId, date: formattedDate };
-        let quotePath = path.join(__dirname, 'quotes', `${quoteId}.pdf`);
-
+        const htmlDir = path.join(__dirname, 'quotes');
+        if (!fs.existsSync(htmlDir)) fs.mkdirSync(htmlDir, { recursive: true });
+        const quotePath = path.join(htmlDir, `${quoteId}.html`);
         try {
-            quotePath = await generatePDF(quoteData, advisorName);
-        } catch (pdfErr) {
-            console.error("PDF generation failed:", pdfErr);
-            if (!fs.existsSync(quotePath)) fs.writeFileSync(quotePath, "");
+            const html = buildQuoteHTML(quoteData);
+            fs.writeFileSync(quotePath, html);
+        } catch (htmlErr) {
+            console.error("HTML generation failed:", htmlErr);
         }
 
         const members = body.members || [];
@@ -439,8 +442,8 @@ app.post('/api/submit-quote', async (req, res) => {
                 from: process.env.GMAIL_USER,
                 to: process.env.MASTER_EMAIL,
                 subject: `New Quote – ${quoteId} – ${body.customer_name || 'N/A'} – ${formattedDate}`,
-                text: `New health insurance quote submitted.\n\nQuote ID: ${quoteId}\nDate: ${formattedDate}\nSubmitted by: ${submittedBy}\nCustomer: ${body.customer_name}\nPhone: ${body.customer_phone}\n\nMEMBERS:\n${membersText}\n\nFull PDF attached.`,
-                attachments: [{ filename: `${quoteId}.pdf`, path: quotePath }]
+                text: `New health insurance quote submitted.\n\nQuote ID: ${quoteId}\nDate: ${formattedDate}\nSubmitted by: ${submittedBy}\nCustomer: ${body.customer_name}\nPhone: ${body.customer_phone}\n\nMEMBERS:\n${membersText}\n\nQuote HTML attached.`,
+                attachments: [{ filename: `${quoteId}.html`, path: quotePath }]
             });
         } catch (emailErr) {
             console.error("Email sending failed:", emailErr);
@@ -454,7 +457,7 @@ app.post('/api/submit-quote', async (req, res) => {
     }
 });
 
-// GENERATE QUOTE PDF (called by React dashboard quote tool)
+// GENERATE QUOTE HTML (called by React dashboard quote tool)
 app.post('/generate', async (req, res) => {
     try {
         const body = req.body;
@@ -478,13 +481,16 @@ app.post('/generate', async (req, res) => {
             console.error('DB save error (non-fatal):', dbErr.message);
         }
 
-        const pdfPath = await generatePDF(quoteData, body.advisor_name || body.agent_name || null);
-        res.setHeader('Content-Type', 'application/pdf');
-        res.setHeader('Content-Disposition', `attachment; filename="${quoteId}.pdf"`);
-        fs.createReadStream(pdfPath).pipe(res);
+        // Save HTML file (like term quotes)
+        const html = buildQuoteHTML(quoteData);
+        const htmlDir = path.join(__dirname, 'quotes');
+        if (!fs.existsSync(htmlDir)) fs.mkdirSync(htmlDir, { recursive: true });
+        fs.writeFileSync(path.join(htmlDir, `${quoteId}.html`), html);
+
+        res.json({ success: true, quoteId, url: `/quotes/${quoteId}.html` });
     } catch (err) {
         console.error('Generate error:', err);
-        res.status(500).send('Failed to generate quote: ' + err.message);
+        res.status(500).json({ success: false, message: 'Failed to generate quote: ' + err.message });
     }
 });
 

@@ -507,7 +507,7 @@
       <div class="modal-footer">
         <button class="btn btn-secondary" onclick="markReviewedFromModal()">✓ Mark Reviewed</button>
         <button class="btn btn-secondary" onclick="window.print()">🖨 Print</button>
-        <button class="btn btn-secondary" id="modal-pdf-btn" onclick="downloadPDF(currentQuoteId)">⬇ Download PDF</button>
+        <button class="btn btn-secondary" id="modal-pdf-btn" onclick="window.open('/quotes/' + currentQuoteId + '.html', '_blank')">⬇ Open Quote</button>
         <button class="btn btn-primary" onclick="closeModal()">✕ Close</button>
       </div>
     </div>
@@ -639,7 +639,7 @@
                 <button class="action-icon-btn" title="View Quote" onclick="editLead('${l.quote_id}')">
                   <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                 </button>
-                <button class="action-icon-btn" title="${l.quote_id.startsWith('TM') ? 'Open Quote' : 'Download PDF'}" onclick="${l.quote_id.startsWith('TM') ? `window.open('/quotes/${l.quote_id}.html','_blank')` : `downloadPDF('${l.quote_id}')`}">
+                <button class="action-icon-btn" title="Open Quote" onclick="window.open('/quotes/${l.quote_id}.html','_blank')">
                   <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4m4-5l5 5 5-5m-5 5V3"/></svg>
                 </button>
                 <button class="action-icon-btn" title="Edit Quote (Add Insurers & Premiums)" onclick="openEditModal('${l.quote_id}')">
