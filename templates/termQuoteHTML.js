@@ -371,11 +371,12 @@ function buildTermQuoteHTML(data) {
 <head>
 <meta charset="UTF-8">
 <style>
-  @page { size: A4 landscape; margin: 0.7cm; }
+  @page { size: A4 landscape; margin: 1.5cm 2cm; }
+  @media print { @page { size: A4 landscape; margin: 1.5cm 2cm; } body { margin: 0; } .page { padding: 0; } }
   * { -webkit-print-color-adjust: exact; print-color-adjust: exact; box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; font-size: 12px; color: #1a1a1a; background: white; overflow-x: hidden; }
-  .page { padding: 2px 0; width: 100%; overflow: hidden; }
-  .page-break { page-break-after: always; page-break-inside: avoid; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; font-size: 12px; color: #1a1a1a; background: #f5f5f5; overflow-x: hidden; }
+  .page { max-width: 1100px; margin: 20px auto; padding: 32px 40px; background: white; border-radius: 8px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); overflow: hidden; }
+  .page-break { page-break-after: always; page-break-inside: avoid; margin-bottom: 20px; }
   td, th { word-wrap: break-word; overflow-wrap: break-word; }
 </style>
 </head>
