@@ -203,11 +203,9 @@ function buildPremiumTable(data) {
       </div>
     </td>`;
 
-    // Highlight cheapest annual premium cells
+    // Highlight cheapest annual premium cells only (not totals)
     const isChpA = compA.yr2 > 0 && compA.yr2 === cheapestA_annual;
     const isChpB = compB.yr2 > 0 && compB.yr2 === cheapestB_annual;
-    const isChpTotA = compA.total > 0 && compA.total === cheapestA_total;
-    const isChpTotB = compB.total > 0 && compB.total === cheapestB_total;
 
     const greenBg = `background:${HIGHLIGHT_GREEN};`;
     const greenTick = '✅ ';
@@ -240,8 +238,8 @@ function buildPremiumTable(data) {
         ${premCell(compA.yr2, isChpA)}
         ${premCell(compB.yr1, false)}
         ${premCell(compB.yr2, isChpB)}
-        ${totalCell(totA, isChpTotA)}
-        ${totalCell(totB, isChpTotB)}
+        ${totalCell(totA, false)}
+        ${totalCell(totB, false)}
         ${savingsCell}
         ${pctCell}
       </tr>`;
@@ -250,8 +248,8 @@ function buildPremiumTable(data) {
         ${companyCell}
         ${premCell(compA.annual, isChpA)}
         ${premCell(compB.annual, isChpB)}
-        ${totalCell(totA, isChpTotA)}
-        ${totalCell(totB, isChpTotB)}
+        ${totalCell(totA, false)}
+        ${totalCell(totB, false)}
         ${savingsCell}
         ${pctCell}
       </tr>`;
