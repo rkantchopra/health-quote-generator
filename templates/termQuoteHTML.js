@@ -188,19 +188,13 @@ function buildPremiumTable(data) {
 
     const bg = idx % 2 === 0 ? '#f8fef8' : 'white';
 
-    const logoImg = logoB64
-      ? `<img src="${logoB64}" style="height:28px;max-width:55px;object-fit:contain;flex-shrink:0" />`
-      : `<div style="width:28px;height:28px;border-radius:50%;background:${INSURER_COLORS[idx % INSURER_COLORS.length]};display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:12px;flex-shrink:0">${esc(brand.charAt(0))}</div>`;
+    // Logo-only cell (no text — logo has brand name in it)
+    const logoHTML = logoB64
+      ? `<img src="${logoB64}" style="height:44px;max-width:130px;object-fit:contain;display:block;margin:0 auto" />`
+      : `<div style="font-weight:700;font-size:12px;color:${INSURER_COLORS[idx % INSURER_COLORS.length]};text-align:center">${esc(brand)}${sub ? `<br><span style="font-size:9px;color:#888;font-weight:400">${esc(sub)}</span>` : ''}</div>`;
 
-    // Merged logo + name cell
-    const companyCell = `<td style="padding:6px 8px;border:1px solid #e0e0e0;text-align:left;background:${bg}">
-      <div style="display:flex;align-items:center;gap:6px">
-        ${logoImg}
-        <div style="min-width:0">
-          <div style="font-weight:700;font-size:11px;color:#1a1a1a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(brand)}</div>
-          ${sub ? `<div style="font-size:9px;color:#888;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(sub)}</div>` : ''}
-        </div>
-      </div>
+    const companyCell = `<td style="padding:10px 6px;border:1px solid #e0e0e0;text-align:center;background:${bg};vertical-align:middle">
+      ${logoHTML}
     </td>`;
 
     // Highlight cheapest annual premium cells only (not totals)
