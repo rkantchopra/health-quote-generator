@@ -427,7 +427,12 @@ function buildHeader(data) {
   return `
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
     <div>
-      ${customerName ? `<div style="font-weight:800;font-size:15px;color:${BRAND_GREEN}">${customerName}</div>` : ''}
+      <div style="display:flex;align-items:center;gap:8px">
+        ${customerName ? `<div style="font-weight:800;font-size:15px;color:${BRAND_GREEN}">${customerName}</div>` : ''}
+        ${data.case_type === 'port'
+          ? `<span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;background:#FFF3E0;color:#E65100;border:1px solid #FF9800">🔄 PORT</span>`
+          : `<span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;background:#E8F5E9;color:#2E7D32;border:1px solid #4CAF50">🆕 FRESH</span>`}
+      </div>
       ${customerMeta ? `<div style="font-size:11px;color:#555;margin-top:2px">${customerMeta}</div>` : ''}
     </div>
     <div style="text-align:right;font-size:11px;color:#666;line-height:1.7">
@@ -460,6 +465,43 @@ function buildFooter(data) {
   </div>`;
 }
 
+// ── Previous Policy (Port case) ──────────────────────────────────────────────
+function buildPrevPolicySection(data) {
+  if (data.case_type !== 'port') return '';
+  const daysLeft = data.prev_expiry
+    ? Math.ceil((new Date(data.prev_expiry) - new Date()) / (1000 * 60 * 60 * 24))
+    : null;
+  const expiryFormatted = data.prev_expiry
+    ? new Date(data.prev_expiry).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
+    : '—';
+  const urgencyColor = daysLeft !== null && daysLeft <= 15 ? '#D32F2F' : '#E65100';
+  const urgencyText = daysLeft !== null
+    ? (daysLeft > 0 ? `⏰ ${daysLeft} days left to port` : `⚠️ Expired ${Math.abs(daysLeft)} days ago`)
+    : '';
+
+  return `
+  <div style="margin:10px 0;padding:12px 16px;border:2px solid #FF9800;border-radius:10px;background:#FFF8E1">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <div style="font-weight:800;font-size:12px;color:#E65100;text-transform:uppercase;letter-spacing:0.5px">🔄 PORTING CASE — Previous Policy Details</div>
+      ${urgencyText ? `<div style="font-weight:700;font-size:11px;color:${urgencyColor};background:white;padding:4px 10px;border-radius:6px;border:1px solid ${urgencyColor}">${urgencyText}</div>` : ''}
+    </div>
+    <table style="width:100%;border-collapse:collapse">
+      <tr>
+        <th style="background:#F57C00;color:white;font-size:10px;font-weight:700;padding:8px 12px;border:1px solid rgba(255,255,255,0.3);text-align:center">Previous Insurer</th>
+        <th style="background:#F57C00;color:white;font-size:10px;font-weight:700;padding:8px 12px;border:1px solid rgba(255,255,255,0.3);text-align:center">Previous SA</th>
+        <th style="background:#F57C00;color:white;font-size:10px;font-weight:700;padding:8px 12px;border:1px solid rgba(255,255,255,0.3);text-align:center">NCB Benefit</th>
+        <th style="background:#F57C00;color:white;font-size:10px;font-weight:700;padding:8px 12px;border:1px solid rgba(255,255,255,0.3);text-align:center">Policy Expiry</th>
+      </tr>
+      <tr>
+        <td style="padding:8px 12px;border:1px solid #e0e0e0;text-align:center;font-weight:700;font-size:12px">${esc(data.prev_insurer || '—')}</td>
+        <td style="padding:8px 12px;border:1px solid #e0e0e0;text-align:center;font-weight:700;font-size:12px">${esc(data.prev_sa || '—')}</td>
+        <td style="padding:8px 12px;border:1px solid #e0e0e0;text-align:center;font-weight:700;font-size:12px">${esc(data.prev_ncb || '—')}</td>
+        <td style="padding:8px 12px;border:1px solid #e0e0e0;text-align:center;font-weight:700;font-size:12px">${expiryFormatted}</td>
+      </tr>
+    </table>
+  </div>`;
+}
+
 // ── Main export ───────────────────────────────────────────────────────────────
 function buildQuoteHTML(data) {
   const insurers          = data.insurers || [];
@@ -480,11 +522,12 @@ function buildQuoteHTML(data) {
       </div>`
     : '';
 
-  const featTable    = buildFeaturesTable(insurers, featuresOverride);
-  const whyCards     = buildWhyChooseCards(insurers, highlightsOverride);
-  const membersTable = buildMembersTable(members);
-  const headerHTML   = buildHeader(data);
-  const footerHTML   = buildFooter(data);
+  const featTable      = buildFeaturesTable(insurers, featuresOverride);
+  const whyCards       = buildWhyChooseCards(insurers, highlightsOverride);
+  const membersTable   = buildMembersTable(members);
+  const headerHTML     = buildHeader(data);
+  const footerHTML     = buildFooter(data);
+  const prevPolicyHTML = buildPrevPolicySection(data);
 
   return `<!DOCTYPE html>
 <html>
@@ -507,6 +550,7 @@ function buildQuoteHTML(data) {
 
   ${sectionBar('INSURED MEMBERS')}
   ${membersTable}
+  ${prevPolicyHTML}
 
   ${sectionBar('PLAN COMPARISON — PREMIUMS')}
   <div style="display:flex;gap:14px;align-items:stretch;justify-content:center">
