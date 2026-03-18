@@ -162,7 +162,8 @@ function buildPremiumTable(data) {
   let headerHTML = cols.map((c, i) => {
     let w;
     if (isSalaried) {
-      w = i === 0 ? '6%' : i === 1 ? '14%' : '10%';
+      // 10 cols: logo(8%) + company(14%) + 8 data cols(9.75% each = 78%) = 100%
+      w = i === 0 ? '8%' : i === 1 ? '14%' : '9.75%';
     } else {
       w = i === 0 ? '8%' : i === 1 ? '18%' : '10.5%';
     }
@@ -187,7 +188,7 @@ function buildPremiumTable(data) {
     const bg = idx % 2 === 0 ? '#f8fef8' : 'white';
 
     const logoCell = logoB64
-      ? `<img src="${logoB64}" style="height:36px;max-width:70px;object-fit:contain;display:block;margin:0 auto" />`
+      ? `<img src="${logoB64}" style="height:32px;max-width:60px;object-fit:contain;display:block;margin:0 auto" />`
       : `<div style="width:36px;height:36px;border-radius:50%;background:${INSURER_COLORS[idx % INSURER_COLORS.length]};display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:15px;margin:0 auto">${esc(brand.charAt(0))}</div>`;
 
     // Highlight cheapest annual premium cells
