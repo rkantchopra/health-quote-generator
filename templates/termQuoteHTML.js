@@ -538,7 +538,7 @@ function buildTermQuoteHTML(data) {
 </head>
 <body>
 
-<!-- ══════════════ PAGE 1 ══════════════ -->
+<!-- ══════════════ PAGE 1: Premium Comparison ══════════════ -->
 <div class="page page-break">
   ${headerHTML}
   ${highlightBanner}
@@ -546,11 +546,10 @@ function buildTermQuoteHTML(data) {
   ${clientTable}
   ${sectionBar('PREMIUM COMPARISON — ' + esc(data.option_a || 'Regular') + ' vs ' + esc(data.option_b || '10 Pay'))}
   ${premiumTable}
-  ${advisoryNote}
   ${footerHTML}
 </div>
 
-<!-- ══════════════ PAGE 2 ══════════════ -->
+<!-- ══════════════ PAGE 2: Features + Advisory ══════════════ -->
 <div class="page">
   ${headerHTML}
   ${sectionBar('KEY FEATURES COMPARISON')}
@@ -559,6 +558,7 @@ function buildTermQuoteHTML(data) {
   <div style="display:flex;gap:10px;margin-top:4px;page-break-inside:avoid">
     ${whyCards}
   </div>
+  ${advisoryNote}
   ${footerHTML}
 </div>
 
