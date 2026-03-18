@@ -561,10 +561,14 @@ app.use('/quotes', express.static(path.join(__dirname, 'quotes')));
 app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
 
-    // ── Keep-alive: self-ping every 13 minutes so Render free tier doesn't sleep ──
+    // ── Keep-alive: self-ping every 13 min, only 9:30 AM - 10:30 PM IST ──
     const RENDER_URL = process.env.RENDER_EXTERNAL_URL || `http://localhost:${PORT}`;
     setInterval(() => {
-        fetch(`${RENDER_URL}/ping`).catch(() => {});
-        console.log(`[keep-alive] pinged ${RENDER_URL}/ping`);
+        const istHour = new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata', hour: 'numeric', hour12: false });
+        const hr = parseInt(istHour);
+        if (hr >= 9 && hr <= 22) { // 9:30 AM buffer to 10:30 PM IST
+            fetch(`${RENDER_URL}/ping`).catch(() => {});
+            console.log(`[keep-alive] pinged at IST hour ${hr}`);
+        }
     }, 13 * 60 * 1000); // 13 minutes
 });
